@@ -10,7 +10,7 @@ plugins {
 
 android {
     compileSdk = 36
-    namespace = "app.riynk.rpp"
+    namespace = "app.riynk.rpp" // RP PLAYER
 
     defaultConfig {
         minSdk = 24
