@@ -1,0 +1,39 @@
+name: Import Retro Music source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "RetroMusicPlayer-dev.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  import-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Retro Music source
+        run: |
+          test -f RetroMusicPlayer-dev.zip
+          rm -rf /tmp/retro-import
+          mkdir -p /tmp/retro-import
+          unzip -q RetroMusicPlayer-dev.zip -d /tmp/retro-import
+          test -d /tmp/retro-import/RetroMusicPlayer-dev
+          cp -a /tmp/retro-import/RetroMusicPlayer-dev/. .
+          rm -rf /tmp/retro-import RetroMusicPlayer-dev.zip
+
+      - name: Commit imported source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Import Retro Music source as RP-Players foundation"
+            git push
+          fi
