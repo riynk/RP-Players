@@ -44,6 +44,7 @@ jobs:
           done
 
           # Keep generated Android resources and BuildConfig in the RP package.
+          sed -i 's/namespace = "code.name.monkey.retromusic"/namespace = "app.riynk.rpp"/' app/build.gradle.kts
           grep -q 'namespace = "app.riynk.rpp"' app/build.gradle.kts
 
           git config user.name "github-actions[bot]"
