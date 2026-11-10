@@ -14,7 +14,7 @@
   <a href="https://github.com/RetroMusicPlayer/RetroMusicPlayer" style="text-decoration:none" area-label="Min API: 21">
     <img src="https://img.shields.io/badge/minSdkVersion-21-green.svg">
   </a>
-  <a href="https://play.google.com/store/apps/details?id=code.name.monkey.retromusic" style="text-decoration:none" area-label="Play Store">
+  <a href="https://play.google.com/store/apps/details?id=app.riynk.rpp" style="text-decoration:none" area-label="Play Store">
     <img src="https://img.shields.io/badge/Download-Google_Play-green.svg">
   </a>
   <a href="https://github.com/RetroMusicPlayer/RetroMusicPlayer/blob/master/LICENSE.md" style="text-decoration:none" area-label="License: GPL v3">
@@ -40,7 +40,7 @@ ___
 ## Download
 | Play Store | F-Droid | Obtanium |
 |:-:|:-:|:-:|
-| [<img src="assets/google-play-badge.png" height="80">](https://play.google.com/store/apps/details?id=code.name.monkey.retromusic) | [<img src="https://f-droid.org/badge/get-it-on.png" height="80">](https://f-droid.org/en/packages/code.name.monkey.retromusic/) | <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/{%22id%22:%22code.name.monkey.retromusic%22,%22url%22:%22https://github.com/RetroMusicPlayer/RetroMusicPlayer%22,%22author%22:%22RetroMusicPlayer%22,%22name%22:%22Retro Music Player%22}"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/b1c8ac6f2ab08497189721a788a5763e28ff64cd/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="80"></a>
+| [<img src="assets/google-play-badge.png" height="80">](https://play.google.com/store/apps/details?id=app.riynk.rpp) | [<img src="https://f-droid.org/badge/get-it-on.png" height="80">](https://f-droid.org/en/packages/app.riynk.rpp/) | <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/{%22id%22:%22app.riynk.rpp%22,%22url%22:%22https://github.com/RetroMusicPlayer/RetroMusicPlayer%22,%22author%22:%22RetroMusicPlayer%22,%22name%22:%22Retro Music Player%22}"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/b1c8ac6f2ab08497189721a788a5763e28ff64cd/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="80"></a>
  |
 
 or get it from the [GitHub Releases](https://github.com/RetroMusicPlayer/RetroMusicPlayer/releases).

@@ -10,7 +10,7 @@ plugins {
 
 android {
     compileSdk = 36
-    namespace = "code.name.monkey.retromusic"
+    namespace = "app.riynk.rpp"
 
     defaultConfig {
         minSdk = 24
