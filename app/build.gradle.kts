@@ -20,7 +20,7 @@ android {
             useSupportLibrary = true
         }
 
-        applicationId = namespace
+        applicationId = "app.riynk.rpp"
         versionCode = 10703
         versionName = "7.0.3"
 
