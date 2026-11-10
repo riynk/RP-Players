@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "RetroMusicPlayer-dev.zip"
+      - ".github/workflows/import-retro-music.yml"
 
 permissions:
   contents: write
@@ -25,6 +26,8 @@ jobs:
           mkdir -p /tmp/retro-import
           unzip -q RetroMusicPlayer-dev.zip -d /tmp/retro-import
           test -d /tmp/retro-import/RetroMusicPlayer-dev
+          # Keep RP-Players workflows; upstream workflow files require extra token permissions.
+          rm -rf /tmp/retro-import/RetroMusicPlayer-dev/.github
           cp -a /tmp/retro-import/RetroMusicPlayer-dev/. .
           rm -rf /tmp/retro-import RetroMusicPlayer-dev.zip
 
