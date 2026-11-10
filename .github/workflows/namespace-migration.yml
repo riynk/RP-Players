@@ -1,0 +1,57 @@
+name: Migrate RP PLAYER namespace
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/namespace-migration.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rename application package and namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          OLD='code.name.monkey.retromusic'
+          NEW='app.riynk.rpp'
+
+          # Update package declarations, imports, manifest/XML class names,
+          # ProGuard rules, and other textual references across the repository.
+          git grep -Il -F "$OLD" -- ':!.github/workflows/namespace-migration.yml' |
+            while IFS= read -r file; do
+              sed -i "s/$OLD/$NEW/g" "$file"
+            done
+
+          # Move the app source roots to match the new package declaration.
+          for source_set in main normal fdroid; do
+            old_dir="app/src/$source_set/java/code/name/monkey/retromusic"
+            new_dir="app/src/$source_set/java/app/riynk/rpp"
+            if [ -d "$old_dir" ]; then
+              mkdir -p "$(dirname "$new_dir")"
+              git mv "$old_dir" "$new_dir"
+              # Remove now-empty legacy package directories from the worktree.
+              find "app/src/$source_set/java/code" -depth -type d -empty -delete 2>/dev/null || true
+            fi
+          done
+
+          # Keep generated Android resources and BuildConfig in the RP package.
+          grep -q 'namespace = "app.riynk.rpp"' app/build.gradle.kts
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No namespace changes were necessary."
+          else
+            git commit -m "Migrate app namespace to app.riynk.rpp"
+            git push origin HEAD:main
+          fi
