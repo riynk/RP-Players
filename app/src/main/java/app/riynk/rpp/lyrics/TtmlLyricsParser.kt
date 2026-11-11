@@ -172,7 +172,7 @@ object TtmlLyricsParser {
                     val begin = parser.getAttributeValue(null, "begin")
                         ?.let { parseTime(it, frameRate, tickRate, parentStart, appleTiming) }
                     val end = parser.getAttributeValue(null, "end")
-                        ?.let { parseTime(it, frameRate, tickRate, parentStart) }
+                        ?.let { parseTime(it, frameRate, tickRate, parentStart, appleTiming) }
                     val dur = parser.getAttributeValue(null, "dur")
                         ?.let { parseTime(it, frameRate, tickRate, null, appleTiming) }
                     val start = begin ?: parentStart
@@ -191,7 +191,7 @@ object TtmlLyricsParser {
                         if (nested.segments.isEmpty()) {
                             val value = nested.text.toString()
                             if (value.isNotEmpty()) {
-                                result.segments.add(TtmlSegment(value, start, finish, background))
+                                result.segments.add(TtmlSegment(value, start, nestedEnd, background))
                             }
                         } else {
                             result.segments.addAll(nested.segments)
@@ -217,8 +217,9 @@ object TtmlLyricsParser {
 
     /**
      * TTML clock values (00:12.345 / 00:01:12.345), offset values (12.3s,
-     * 120ms, 2m, 1h), and frame/tick values. Offset values inside timed spans
-     * are relative to their parent; clock values are timeline positions.
+     * 120ms, 2m, 1h), and frame/tick values. Standard TTML offsets are relative
+     * to their parent; Apple/TimeLyr timing-profile offsets are absolute, matching
+     * the timestamp interpretation used by Local Player.
      */
     private fun parseTime(
         raw: String,
