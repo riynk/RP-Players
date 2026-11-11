@@ -28,7 +28,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/shadow_blur_theme" />
+        android:background="@drawable/rp_artwork_background_overlay" />
 
     <com.jetradarmobile.snowfall.SnowfallView
         android:id="@+id/snowfall_view"
@@ -118,14 +118,16 @@
         app:layout_constraintTop_toBottomOf="@id/rpRecommendedMetadata" />
 
 
-    <View
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/rpLyricsSpacer"
+        android:name="app.riynk.rpp.fragments.player.BelowArtworkLyricsFragment"
         android:layout_width="0dp"
         android:layout_height="112dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/playerAlbumCoverFragment" />
+        app:layout_constraintTop_toBottomOf="@id/playerAlbumCoverFragment"
+        tools:layout="@layout/fragment_cover_lyrics" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/playbackControlsFragment"
