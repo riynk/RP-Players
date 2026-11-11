@@ -18,7 +18,6 @@ import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import android.app.Activity
 import android.net.Uri
@@ -50,7 +49,6 @@ import app.riynk.rpp.fragments.base.AbsMainActivityFragment
 import app.riynk.rpp.glide.BlurTransformation
 import app.riynk.rpp.glide.RetroGlideExtension
 import app.riynk.rpp.glide.RetroGlideExtension.simpleSongCoverOptions
-import app.riynk.rpp.glide.crossfadeListener
 import app.riynk.rpp.helper.MusicPlayerRemote
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.lyrics.LrcView
@@ -65,7 +63,7 @@ import app.riynk.rpp.util.PreferenceUtil.blurAmount
 import app.riynk.rpp.util.UriUtil
 import com.afollestad.materialdialogs.input.input
 import com.bumptech.glide.Glide
-import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -103,7 +101,6 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         }
 
     private lateinit var updateHelper: MusicProgressViewUpdateHelper
-    private var lastBackgroundRequest: RequestBuilder<Drawable>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -236,6 +233,9 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
     private fun updateLyricsBackground() {
         if (_binding == null || !isAdded) return
         val target: ImageView = binding.colorBackground
+        val previous = target.drawable?.constantState
+            ?.newDrawable(resources)?.mutate()
+            ?: ColorDrawable(Color.DKGRAY)
         Glide.with(this)
             .load(RetroGlideExtension.getSongModel(song))
             .simpleSongCoverOptions(song)
@@ -244,12 +244,10 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
                     .blurRadius(blurAmount.toFloat())
                     .build()
             )
-            .thumbnail(lastBackgroundRequest)
-            .error(Glide.with(this).load(ColorDrawable(Color.DKGRAY)).fitCenter())
-            .also {
-                lastBackgroundRequest = it.clone()
-                it.crossfadeListener().into(target)
-            }
+            .placeholder(previous)
+            .error(ColorDrawable(Color.DKGRAY))
+            .transition(DrawableTransitionOptions.withCrossFade(450))
+            .into(target)
     }
 
     private fun setupToolbar() {
@@ -512,7 +510,6 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         super.onDestroyView()
         if (MusicPlayerRemote.playingQueue.isNotEmpty())
             mainActivity.expandPanel()
-        lastBackgroundRequest = null
         _binding = null
     }
 
