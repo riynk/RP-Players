@@ -15,6 +15,7 @@
 package app.riynk.rpp.fragments.lyrics
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
@@ -27,6 +28,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.preference.PreferenceManager
 import androidx.navigation.fragment.findNavController
 import androidx.transition.Fade
 import code.name.monkey.appthemehelper.common.ATHToolbarActivity
@@ -63,7 +65,8 @@ import java.util.*
 import kotlin.collections.set
 
 class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
-    MusicProgressViewUpdateHelper.Callback {
+    MusicProgressViewUpdateHelper.Callback,
+    SharedPreferences.OnSharedPreferenceChangeListener {
 
     private var _binding: FragmentLyricsBinding? = null
     private val binding get() = _binding!!
@@ -444,12 +447,30 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
 
     override fun onResume() {
         super.onResume()
+        PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .registerOnSharedPreferenceChangeListener(this)
         updateHelper.start()
     }
 
     override fun onPause() {
-        super.onPause()
+        PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .unregisterOnSharedPreferenceChangeListener(this)
         updateHelper.stop()
+        super.onPause()
+    }
+
+    override fun onSharedPreferenceChanged(
+        sharedPreferences: SharedPreferences,
+        key: String?
+    ) {
+        if (key in setOf(
+                "rp_lyrics_main_text_size",
+                "rp_lyrics_background_text_size",
+                "rp_lyrics_line_spacing"
+            )
+        ) {
+            setupLyricsView()
+        }
     }
 
     override fun onDestroyView() {
