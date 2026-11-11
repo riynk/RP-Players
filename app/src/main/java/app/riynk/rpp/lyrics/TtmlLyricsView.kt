@@ -50,7 +50,7 @@ class TtmlLyricsView @JvmOverloads constructor(
     private var playbackRate = 1f
     private var currentTextSize = 30f
     private var normalTextSize = 30f
-    private var backgroundTextSize = 20f
+    private var backgroundTextSize = 24f
     private var currentColor = Color.WHITE
     private var normalColor = 0x66FFFFFF
     private var backgroundColor = 0x66FFFFFF
