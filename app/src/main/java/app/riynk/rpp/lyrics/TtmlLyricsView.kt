@@ -150,12 +150,8 @@ class TtmlLyricsView @JvmOverloads constructor(
             (effectiveEnd == null || currentTime < effectiveEnd)
     }
 
-    private fun hasWordTiming(line: TtmlLine): Boolean {
-        val starts = line.segments.filterNot { it.isBackground }
-            .mapNotNull { it.startMs }.distinct()
-        return starts.size > 1 || lyrics?.timingMode.equals("Word", ignoreCase = true) &&
-            line.segments.any { !it.isBackground && it.startMs != null }
-    }
+    private fun hasWordTiming(line: TtmlLine): Boolean =
+        line.segments.any { !it.isBackground && it.isTimedSpan }
 
     private fun makeSegmentLayout(
         segments: List<TtmlSegment>,
