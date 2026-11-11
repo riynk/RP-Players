@@ -281,6 +281,11 @@ public class LrcView extends View {
         postInvalidate();
     }
 
+    public void setLyricsLineSpacing(float spacingPx) {
+        mDividerHeight = Math.max(0f, spacingPx);
+        postInvalidate();
+    }
+
     public void setTimelineTextColor(int timelineTextColor) {
         mTimelineTextColor = timelineTextColor;
         postInvalidate();
