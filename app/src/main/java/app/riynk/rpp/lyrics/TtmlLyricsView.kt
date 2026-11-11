@@ -345,9 +345,12 @@ class TtmlLyricsView @JvmOverloads constructor(
             canvas.save()
             // Do not enlarge the active line beyond its measured StaticLayout width.
             // Scaling long lines caused the last words to be clipped at screen edges.
+            // Keep a small safety margin around glyph overhang so active
+            // ascenders/descenders and italic edges are not cut by the layer.
+            val layerInset = 8f * density
             canvas.saveLayerAlpha(
-                left.toFloat(), y,
-                (left + layoutWidth).toFloat(), y + rendered.height,
+                left - layerInset, y - layerInset,
+                left + layoutWidth + layerInset, y + rendered.height + layerInset,
                 (alpha * 255).roundToInt()
             )
             canvas.translate(left.toFloat(), y)
