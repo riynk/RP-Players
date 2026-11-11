@@ -105,10 +105,11 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
         ttmlLyrics = null
         lifecycleScope.launch(Dispatchers.IO) {
             val song = MusicPlayerRemote.currentSong
-            val ttmlText = LyricUtil.getSyncedLyricsTtmlFile(song)
+            val sidecarTtml = LyricUtil.getSyncedLyricsTtmlFile(song)
                 ?.let { runCatching { it.readText() }.getOrNull() }
-                ?: LyricUtil.getEmbeddedTtmlLyrics(song.data)
-            val parsedTtml = ttmlText?.let { TtmlLyricsParser.parse(it) }
+            val parsedSidecar = sidecarTtml?.let { TtmlLyricsParser.parse(it) }
+            val parsedTtml = parsedSidecar ?: LyricUtil.getEmbeddedTtmlLyrics(song.data)
+                ?.let { TtmlLyricsParser.parse(it) }
             if (parsedTtml?.isValid == true) {
                 ttmlLyrics = parsedTtml
                 return@launch
