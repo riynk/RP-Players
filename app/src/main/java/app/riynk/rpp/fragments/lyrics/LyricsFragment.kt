@@ -141,6 +141,9 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
                 resources.displayMetrics
             )
         )
+        binding.lyricsView.setLyricsLineSpacing(
+            PreferenceUtil.lyricsLineSpacing * resources.displayMetrics.density
+        )
         val ttmlMainSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_SP,
             PreferenceUtil.lyricsMainTextSize.toFloat(),
