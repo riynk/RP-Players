@@ -32,7 +32,11 @@ data class TtmlSegment(
     val text: String,
     val startMs: Long?,
     val endMs: Long?,
-    val isBackground: Boolean
+    val isBackground: Boolean,
+    /** True when this timed fragment continues the same word into the next fragment. */
+    val continuesWord: Boolean = false,
+    /** True when the source leaves a musical sustain/gap before the next fragment. */
+    val isSustained: Boolean = false
 )
 
 enum class TtmlAlignment { LEFT, RIGHT }
@@ -118,7 +122,9 @@ object TtmlLyricsParser {
         val text = parsed.text.toString()
         if (text.isBlank()) return null
 
-        val segments = markParentheticalBackground(parsed.segments.filter { it.text.isNotEmpty() })
+        val segments = markSustainedSegments(
+            markParentheticalBackground(parsed.segments.filter { it.text.isNotEmpty() })
+        )
         val inferredStart = segments.mapNotNull { it.startMs }.minOrNull()
         val inferredEnd = segments.mapNotNull { it.endMs }.maxOrNull()
         return TtmlLine(
@@ -139,19 +145,70 @@ object TtmlLyricsParser {
      * Some TTML sources identify backing vocals with parentheses instead of x-bg.
      * Preserve the original characters, but render the enclosed passage as secondary text.
      */
+    /**
+     * Match Local Player's background-vocal handling: text enclosed in parentheses
+     * becomes a secondary vocal layer and the delimiter characters are not rendered.
+     * Timings are copied unchanged to every resulting text fragment.
+     */
     private fun markParentheticalBackground(segments: List<TtmlSegment>): List<TtmlSegment> {
         var insideParentheses = false
-        return segments.map { segment ->
-            if (segment.text.contains("(")) insideParentheses = true
-            val updated = if (insideParentheses || segment.isBackground) {
-                segment.copy(isBackground = true)
-            } else {
-                segment
+        val result = mutableListOf<TtmlSegment>()
+        segments.forEach { segment ->
+            if (segment.isBackground) {
+                val clean = segment.text.replace("(", "").replace(")", "")
+                if (clean.isNotEmpty()) result.add(segment.copy(text = clean, isBackground = true))
+                return@forEach
             }
-            if (segment.text.contains(")")) insideParentheses = false
-            updated
+
+            var buffer = StringBuilder()
+            var background = insideParentheses
+            fun flush() {
+                if (buffer.isNotEmpty()) {
+                    result.add(segment.copy(text = buffer.toString(), isBackground = background))
+                    buffer = StringBuilder()
+                }
+            }
+            segment.text.forEach { character ->
+                when (character) {
+                    '(' -> {
+                        flush()
+                        insideParentheses = true
+                        background = true
+                    }
+                    ')' -> {
+                        flush()
+                        insideParentheses = false
+                        background = false
+                    }
+                    else -> {
+                        if (background != insideParentheses) {
+                            flush()
+                            background = insideParentheses
+                        }
+                        buffer.append(character)
+                    }
+                }
+            }
+            flush()
+        }
+        return result.map { item ->
+            val last = item.text.lastOrNull()
+            val continues = last != null && !last.isWhitespace() &&
+                last !in setOf('-', '\u2010', '\u2013', '\u2014')
+            item.copy(continuesWord = continues)
         }
     }
+
+    /** Preserve source timings and mark the same >50ms sustain gap used by Local Player. */
+    private fun markSustainedSegments(segments: List<TtmlSegment>): List<TtmlSegment> =
+        segments.mapIndexed { index, segment ->
+            val next = segments.drop(index + 1).firstOrNull {
+                it.startMs != null && (segment.startMs == null || it.startMs > segment.startMs)
+            }
+            val end = segment.endMs ?: next?.startMs
+            val gap = if (end != null && next?.startMs != null) next.startMs - end else 0L
+            segment.copy(isSustained = gap > 50L)
+        }
 
     /** Called while the parser is positioned on the opening tag. */
     private fun parseChildren(
