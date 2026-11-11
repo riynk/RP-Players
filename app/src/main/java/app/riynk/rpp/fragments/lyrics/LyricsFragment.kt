@@ -384,8 +384,9 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
             val ttml = withContext(Dispatchers.IO) {
                 val sidecar = LyricUtil.getSyncedLyricsTtmlFile(currentSong)
                     ?.let { runCatching { it.readText() }.getOrNull() }
-                val source = sidecar ?: LyricUtil.getEmbeddedTtmlLyrics(currentSong.data)
-                source?.let { TtmlLyricsParser.parse(it) }
+                val parsedSidecar = sidecar?.let { TtmlLyricsParser.parse(it) }
+                parsedSidecar ?: LyricUtil.getEmbeddedTtmlLyrics(currentSong.data)
+                    ?.let { TtmlLyricsParser.parse(it) }
             }
 
             if (_binding == null || MusicPlayerRemote.currentSong.id != currentSong.id) return@launch
