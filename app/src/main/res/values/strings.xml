@@ -397,6 +397,13 @@
     <string name="rp_lyrics">RP Lyrics</string>
     <string name="rp_recommended">RP Recommended</string>
     <string name="pref_title_full_lyrics_type">Full lyrics appearance</string>
+    <string name="pref_lyrics_typography_title">Lyrics typography</string>
+    <string name="pref_lyrics_main_text_size">Main lyric size</string>
+    <string name="pref_lyrics_main_text_size_summary">Adjust the size of the primary lyric text</string>
+    <string name="pref_lyrics_background_text_size">Background vocal size</string>
+    <string name="pref_lyrics_background_text_size_summary">Adjust the size of backing and secondary vocals</string>
+    <string name="pref_lyrics_line_spacing">Lyrics line spacing</string>
+    <string name="pref_lyrics_line_spacing_summary">Adjust the vertical gap between lyric lines</string>
     <string name="report_an_issue">Report an issue</string>
     <string name="report_bug">Report bug</string>
     <string name="reset_action">Reset</string>
