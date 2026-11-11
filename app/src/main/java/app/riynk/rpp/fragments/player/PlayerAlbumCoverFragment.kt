@@ -239,6 +239,7 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
         val lyricsView: View = when (PreferenceUtil.lyricsType) {
             CoverLyricsType.REPLACE_COVER -> {
                 ObjectAnimator.ofFloat(viewPager, View.ALPHA, if (visible) 0F else 1F).start()
+                binding.lyricsView.isVisible = visible
                 binding.fadingEdgeLayout
             }
             CoverLyricsType.OVER_COVER -> {
