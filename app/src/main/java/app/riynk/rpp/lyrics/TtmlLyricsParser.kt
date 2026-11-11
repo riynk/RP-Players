@@ -35,6 +35,8 @@ data class TtmlSegment(
     val isBackground: Boolean,
     /** True when this timed fragment continues the same word into the next fragment. */
     val continuesWord: Boolean = false,
+    /** True only when this fragment came from a TTML span with its own timing. */
+    val isTimedSpan: Boolean = false,
     /** True when the source leaves a musical sustain/gap before the next fragment. */
     val isSustained: Boolean = false
 )
@@ -245,13 +247,22 @@ object TtmlLyricsParser {
                     )
                     result.text.append(nested.text)
                     if (tag == "span") {
+                        val hasOwnTiming = parser.getAttributeValue(null, "begin") != null ||
+                            parser.getAttributeValue(null, "end") != null ||
+                            parser.getAttributeValue(null, "dur") != null
                         if (nested.segments.isEmpty()) {
                             val value = nested.text.toString()
                             if (value.isNotEmpty()) {
-                                result.segments.add(TtmlSegment(value, start, nestedEnd, background))
+                                result.segments.add(
+                                    TtmlSegment(value, start, nestedEnd, background, isTimedSpan = hasOwnTiming)
+                                )
                             }
                         } else {
-                            result.segments.addAll(nested.segments)
+                            result.segments.addAll(
+                                nested.segments.map { child ->
+                                    child.copy(isTimedSpan = child.isTimedSpan || hasOwnTiming)
+                                }
+                            )
                         }
                     } else {
                         result.segments.addAll(nested.segments)
