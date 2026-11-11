@@ -274,6 +274,13 @@ public class LrcView extends View {
         postInvalidate();
     }
 
+    public void setTextSizes(float currentTextSize, float normalTextSize) {
+        mCurrentTextSize = currentTextSize;
+        mNormalTextSize = normalTextSize;
+        mLrcPaint.setTextSize(currentTextSize);
+        postInvalidate();
+    }
+
     public void setTimelineTextColor(int timelineTextColor) {
         mTimelineTextColor = timelineTextColor;
         postInvalidate();

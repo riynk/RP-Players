@@ -393,6 +393,9 @@
     <string name="remove_x_songs_from_playlist"><![CDATA[Remove <b>%1$d</b> songs from the playlist?]]></string>
     <string name="rename_playlist_title">Rename playlist</string>
     <string name="replace_cover">Replace Cover</string>
+    <string name="below_artwork">Below Artwork</string>
+    <string name="rp_lyrics">RP Lyrics</string>
+    <string name="pref_title_full_lyrics_type">Full lyrics appearance</string>
     <string name="report_an_issue">Report an issue</string>
     <string name="report_bug">Report bug</string>
     <string name="reset_action">Reset</string>

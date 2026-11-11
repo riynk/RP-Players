@@ -20,6 +20,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.InputType
+import android.util.TypedValue
 import android.view.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -46,6 +47,7 @@ import app.riynk.rpp.model.AudioTagInfo
 import app.riynk.rpp.model.Song
 import app.riynk.rpp.util.FileUtils
 import app.riynk.rpp.util.LyricUtil
+import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.UriUtil
 import com.afollestad.materialdialogs.input.input
 import kotlinx.coroutines.launch
@@ -121,6 +123,12 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
 
     private fun setupLyricsView() {
         binding.lyricsView.apply {
+            if (PreferenceUtil.isRpLyrics) {
+                setTextSizes(
+                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 38f, resources.displayMetrics),
+                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 30f, resources.displayMetrics)
+                )
+            }
             setCurrentColor(accentColor())
             setTimeTextColor(accentColor())
             setTimelineColor(accentColor())
@@ -164,10 +172,18 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
 
     private fun updateTitleSong() {
         song = MusicPlayerRemote.currentSong
+        if (_binding != null && PreferenceUtil.isRpLyrics) {
+            binding.toolbar.title = song.title
+            binding.toolbar.subtitle = song.artistName
+        }
     }
 
     private fun setupToolbar() {
         mainActivity.setSupportActionBar(binding.toolbar)
+        if (PreferenceUtil.isRpLyrics) {
+            binding.toolbar.title = song.title
+            binding.toolbar.subtitle = song.artistName
+        }
         ToolbarContentTintHelper.colorBackButton(binding.toolbar)
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()

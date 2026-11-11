@@ -45,6 +45,7 @@ import app.riynk.rpp.DESATURATED_COLOR
 import app.riynk.rpp.ENABLE_SEARCH_PLAYLIST
 import app.riynk.rpp.EXPAND_NOW_PLAYING_PANEL
 import app.riynk.rpp.EXTRA_SONG_INFO
+import app.riynk.rpp.FULL_LYRICS_TYPE
 import app.riynk.rpp.FILTER_SONG
 import app.riynk.rpp.GENERAL_THEME
 import app.riynk.rpp.GENRE_SORT_ORDER
@@ -817,6 +818,9 @@ object PreferenceUtil {
 
     val isSnowFalling
         get() = sharedPreferences.getBoolean(SNOWFALL, false)
+
+    val isRpLyrics: Boolean
+        get() = sharedPreferences.getString(FULL_LYRICS_TYPE, "0") == "1"
 
     val lyricsType: CoverLyricsType
         get() = if (sharedPreferences.getString(LYRICS_TYPE, "0") == "0") {

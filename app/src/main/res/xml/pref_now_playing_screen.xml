@@ -37,6 +37,15 @@
             app:icon="@drawable/ic_lyrics"
         />
 
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+        android:defaultValue="0"
+        android:entries="@array/pref_full_lyrics_type_entries"
+        android:entryValues="@array/pref_full_lyrics_type_values"
+        android:key="full_lyrics_type"
+        android:layout="@layout/list_item_view"
+        android:title="@string/pref_title_full_lyrics_type"
+        app:icon="@drawable/ic_lyrics" />
+
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
         android:defaultValue="false"
         android:key="screen_on_lyrics"
