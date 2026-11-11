@@ -289,7 +289,8 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
 
     @SuppressLint("CheckResult")
     private fun editSyncedLyrics(lyrics: String? = null) {
-        val content = lyrics ?: LyricUtil.getStringFromLrc(LyricUtil.getSyncedLyricsFile(song))
+        val syncedFile = LyricUtil.getSyncedLyricsTtmlFile(song) ?: LyricUtil.getSyncedLyricsFile(song)
+        val content = lyrics ?: LyricUtil.getStringFromLrc(syncedFile)
 
         val song = song
         materialDialog().show {
@@ -301,10 +302,9 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
             ) { _, input ->
                 if (VersionUtils.hasR()) {
                     syncedLyrics = input.toString()
-                    val lrcFile = LyricUtil.getSyncedLyricsFile(song)
-                    if (lrcFile?.exists() == true) {
+                    if (syncedFile?.exists() == true) {
                         syncedFileUri =
-                            UriUtil.getUriFromPath(requireContext(), lrcFile.absolutePath)
+                            UriUtil.getUriFromPath(requireContext(), syncedFile.absolutePath)
                         val pendingIntent =
                             MediaStore.createWriteRequest(
                                 requireContext().contentResolver,
@@ -332,11 +332,15 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
                         }
                     }
                 } else {
-                    LyricUtil.writeLrc(song, input.toString())
+                    if (syncedFile?.exists() == true) {
+                        syncedFile.writeText(input.toString())
+                    } else {
+                        LyricUtil.writeLrc(song, input.toString())
+                    }
                 }
             }
             positiveButton(res = R.string.save) {
-                loadLRCLyrics()
+                loadLyrics()
             }
             negativeButton(res = android.R.string.cancel)
         }
@@ -384,7 +388,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
                 source?.let { TtmlLyricsParser.parse(it) }
             }
 
-            if (_binding == null) return@launch
+            if (_binding == null || MusicPlayerRemote.currentSong.id != currentSong.id) return@launch
             if (ttml?.isValid == true) {
                 binding.ttmlLyricsView.setLyrics(ttml)
                 binding.ttmlLyricsView.updateTime(MusicPlayerRemote.songProgressMillis.toLong())
