@@ -176,7 +176,7 @@ class TtmlLyricsView @JvmOverloads constructor(
             Layout.Alignment.ALIGN_NORMAL
         }
         val contentWidth = max(1, width - paddingLeft - paddingRight)
-        val hasMultipleVoices = lyrics?.lines?.mapNotNull { it.agent }?.distinct()?.size ?: 0 > 1
+        val hasMultipleVoices = (lyrics?.lines?.mapNotNull { it.agent }?.distinct()?.size ?: 0) > 1
         val layoutWidth = (contentWidth * if (hasMultipleVoices) 0.7f else 1f).toInt().coerceAtLeast(1)
         return StaticLayout.Builder.obtain(builder, 0, builder.length, paint, layoutWidth)
             .setAlignment(alignment)
