@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.util.TypedValue
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.core.animation.doOnEnd
@@ -47,6 +48,9 @@ import app.riynk.rpp.fragments.base.goToLyrics
 import app.riynk.rpp.helper.MusicPlayerRemote
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.lyrics.CoverLrcView
+import app.riynk.rpp.lyrics.LyricsDocument
+import app.riynk.rpp.lyrics.LyricsRepository
+import app.riynk.rpp.lyrics.TtmlLyricsView
 import app.riynk.rpp.model.lyrics.Lyrics
 import app.riynk.rpp.transform.CarousalPagerTransformer
 import app.riynk.rpp.transform.ParallaxPagerTransformer
@@ -57,6 +61,7 @@ import app.riynk.rpp.util.color.MediaNotificationProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
 
 class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_player_album_cover),
     ViewPager.OnPageChangeListener, MusicProgressViewUpdateHelper.Callback,
@@ -76,6 +81,8 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
         }
     }
     private var progressViewUpdateHelper: MusicProgressViewUpdateHelper? = null
+    private var lyricsLoadJob: Job? = null
+    private var usingTtmlLyrics = false
 
     private val lrcView: CoverLrcView get() = binding.lyricsView
 
@@ -92,28 +99,65 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
     }
 
     private fun updateLyrics() {
-        val song = MusicPlayerRemote.currentSong
-        lifecycleScope.launch(Dispatchers.IO) {
-            val lrcFile = LyricUtil.getSyncedLyricsFile(song)
-            if (lrcFile != null) {
-                binding.lyricsView.loadLrc(lrcFile)
-            } else {
-                val embeddedLyrics = LyricUtil.getEmbeddedSyncedLyrics(song.data)
-                if (embeddedLyrics != null) {
-                    binding.lyricsView.loadLrc(embeddedLyrics)
-                } else {
-                    withContext(Dispatchers.Main) {
-                        binding.lyricsView.reset()
-                        binding.lyricsView.setLabel(context?.getString(R.string.no_lyrics_found))
+        val currentSong = MusicPlayerRemote.currentSong
+        lyricsLoadJob?.cancel()
+        lyricsLoadJob = viewLifecycleOwner.lifecycleScope.launch {
+            val document = withContext(Dispatchers.IO) {
+                LyricsRepository.load(currentSong)
+            }
+            if (_binding == null || MusicPlayerRemote.currentSong.id != currentSong.id) {
+                return@launch
+            }
+
+            when (document) {
+                is LyricsDocument.Ttml -> {
+                    usingTtmlLyrics = true
+                    lrcView.reset()
+                    binding.ttmlLyricsView.apply {
+                        setTextSizes(
+                            TypedValue.applyDimension(
+                                TypedValue.COMPLEX_UNIT_SP, 30f, resources.displayMetrics
+                            ),
+                            TypedValue.applyDimension(
+                                TypedValue.COMPLEX_UNIT_SP, 30f, resources.displayMetrics
+                            )
+                        )
+                        setCurrentColor(android.graphics.Color.WHITE)
+                        setNormalColor(0x99FFFFFF.toInt())
+                        setBackgroundVocalColor(0xCCFFFFFF.toInt())
+                        setPlaybackRate(PreferenceUtil.lyricsPlaybackRate)
+                        setOnSeekListener { time ->
+                            MusicPlayerRemote.seekTo(time.toInt())
+                            MusicPlayerRemote.resumePlaying()
+                        }
+                        setLyrics(document.value)
+                        isVisible = true
+                        post { updateTime(MusicPlayerRemote.songProgressMillis.toLong()) }
                     }
+                    lrcView.isVisible = false
+                }
+                is LyricsDocument.Lrc -> {
+                    usingTtmlLyrics = false
+                    binding.ttmlLyricsView.setLyrics(null)
+                    binding.ttmlLyricsView.isVisible = false
+                    lrcView.loadLrc(document.content)
+                    lrcView.isVisible = true
+                }
+                LyricsDocument.None -> {
+                    usingTtmlLyrics = false
+                    binding.ttmlLyricsView.setLyrics(null)
+                    binding.ttmlLyricsView.isVisible = false
+                    lrcView.reset()
+                    lrcView.setLabel(context?.getString(R.string.no_lyrics_found))
+                    lrcView.isVisible = true
                 }
             }
         }
-
     }
 
     override fun onUpdateProgressViews(progress: Int, total: Int) {
         binding.lyricsView.updateTime(progress.toLong())
+        binding.ttmlLyricsView.updateTime(progress.toLong())
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -176,6 +220,8 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
             .unregisterOnSharedPreferenceChangeListener(this)
         binding.viewPager.removeOnPageChangeListener(this)
         progressViewUpdateHelper?.stop()
+        lyricsLoadJob?.cancel()
+        lyricsLoadJob = null
         _binding = null
     }
 
@@ -224,6 +270,7 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
     private fun showLyrics(visible: Boolean) {
         binding.coverLyrics.isVisible = false
         binding.lyricsView.isVisible = false
+        binding.ttmlLyricsView.isVisible = false
         binding.viewPager.isVisible = true
 
         if (PreferenceUtil.lyricsType == CoverLyricsType.BELOW_ARTWORK) {
@@ -262,7 +309,7 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
         binding.coverLyrics.layoutParams = coverLyricsParams
         val lyrics: View = if (PreferenceUtil.lyricsType == CoverLyricsType.REPLACE_COVER) {
             ObjectAnimator.ofFloat(viewPager, View.ALPHA, if (visible) 0F else 1F).start()
-            lrcView
+            if (usingTtmlLyrics) binding.ttmlLyricsView else lrcView
         } else {
             ObjectAnimator.ofFloat(viewPager, View.ALPHA, 1F).start()
             binding.coverLyrics
