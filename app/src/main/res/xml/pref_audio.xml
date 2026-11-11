@@ -7,14 +7,18 @@
         android:key="audio_fade_duration"
         android:layout="@layout/list_item_view"
         android:summary="@string/pref_summary_audio_fade"
-        android:title="@string/pref_title_audio_fade" app:icon="@drawable/ic_volume_down" />
+        android:title="@string/pref_title_audio_fade"
+            app:icon="@drawable/ic_volume_down"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
         android:defaultValue="false"
         android:key="manage_audio_focus"
         android:layout="@layout/list_item_view_switch"
         android:summary="@string/pref_summary_manage_audio_focus"
-        android:title="@string/pref_title_manage_audio_focus" app:icon="@drawable/ic_equalizer" />
+        android:title="@string/pref_title_manage_audio_focus"
+            app:icon="@drawable/ic_equalizer"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESeekBarPreference
         android:defaultValue="0"
@@ -24,13 +28,17 @@
         android:max="12"
         android:summary="@string/pref_summary_cross_fade"
         android:title="@string/pref_title_cross_fade"
-        app:showSeekBarValue="true" app:icon="@drawable/ic_repeat" />
+        app:showSeekBarValue="true"
+            app:icon="@drawable/ic_repeat"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreference
         android:key="equalizer"
         android:layout="@layout/list_item_view_no_title"
         android:title="@string/equalizer"
-        app:icon="@drawable/ic_equalizer" />
+       
+            app:icon="@drawable/ic_equalizer"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
         android:defaultValue="false"
@@ -38,7 +46,9 @@
         android:layout="@layout/list_item_view_switch"
         android:summary="@string/pref_summary_toggle_headset"
         android:title="@string/pref_title_toggle_toggle_headset"
-        app:icon="@drawable/ic_play_arrow" />
+       
+            app:icon="@drawable/ic_play_arrow"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
         android:defaultValue="false"
@@ -46,7 +56,9 @@
         android:layout="@layout/list_item_view_switch"
         android:summary="@string/pref_summary_bluetooth_playback"
         android:title="@string/pref_title_bluetooth_playback"
-        app:icon="@drawable/ic_bluetooth_connect" />
+       
+            app:icon="@drawable/ic_bluetooth_connect"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
         android:defaultValue="false"
@@ -54,6 +66,8 @@
         android:layout="@layout/list_item_view_switch"
         android:summary="@string/pref_summary_disable_speaker"
         android:title="@string/pref_title_disable_speaker"
-        app:icon="@drawable/ic_volume_off" />
+       
+            app:icon="@drawable/ic_volume_off"
+        />
 
 </androidx.preference.PreferenceScreen>
