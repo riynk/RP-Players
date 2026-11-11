@@ -159,6 +159,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/previousButton"
         app:layout_constraintTop_toBottomOf="@+id/progressSlider"
+        app:layout_constraintVertical_bias="0.30"
         app:srcCompat="@drawable/ic_pause"
         tools:tint="@color/md_black_1000" />
 
