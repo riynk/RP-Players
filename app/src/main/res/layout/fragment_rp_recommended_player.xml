@@ -39,15 +39,80 @@
     </FrameLayout>
 
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/rpRecommendedMetadata"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="24dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusBarContainer">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/rpSongTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextViewHeadline6"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/rpCastButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Hold On" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/rpSongArtist"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextViewBody2"
+            android:textColor="?android:attr/textColorSecondary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/rpSongTitle"
+            tools:text="Chord Overstreet" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/rpSongAlbum"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextViewCaption"
+            android:textColor="?android:attr/textColorSecondary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/rpSongArtist"
+            tools:text="Hold On · Single" />
+
+        <ImageView
+            android:id="@+id/rpCastButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="@string/cast"
+            android:padding="8dp"
+            android:src="@drawable/ic_cast"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/rpSongTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/rpSongTitle" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/playerAlbumCoverFragment"
         android:name="app.riynk.rpp.fragments.player.PlayerAlbumCoverFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.42"
+        app:layout_constraintHeight_percent="0.39"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statusBarContainer" />
+        app:layout_constraintTop_toBottomOf="@id/rpRecommendedMetadata" />
 
 
     <androidx.fragment.app.FragmentContainerView
