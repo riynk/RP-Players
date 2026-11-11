@@ -5,27 +5,27 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
-import android.graphics.Shader
 import android.graphics.Paint
+import android.graphics.Shader
+import android.graphics.Typeface
 import android.text.Layout
 import android.text.SpannableStringBuilder
 import android.text.Spanned
-import android.text.style.ForegroundColorSpan
 import android.text.StaticLayout
-import android.graphics.Typeface
 import android.text.TextPaint
-import android.text.style.RelativeSizeSpan
 import android.text.style.CharacterStyle
+import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * TTML renderer with timed segment highlighting, agent-based left/right alignment,
- * and smaller background-vocal spans. It keeps the existing LrcView untouched.
+ * TTML renderer. Keeps the existing RP PLAYER View/API while following
+ * Local Player's word-fill, secondary-vocal, line-scale and scroll behaviour.
  */
 class TtmlLyricsView @JvmOverloads constructor(
     context: Context,
@@ -36,18 +36,25 @@ class TtmlLyricsView @JvmOverloads constructor(
         fun onSeek(timeMs: Long)
     }
 
+    private data class RenderedLine(
+        val main: StaticLayout,
+        val background: StaticLayout?,
+        val height: Int
+    )
+
     private val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private var lyrics: TtmlLyrics? = null
     private var currentLine = -1
     private var currentTime = 0L
     private var playbackPositionMs = 0L
     private var playbackRate = 1f
-    private var currentTextSize = 38f
+    private var currentTextSize = 30f
     private var normalTextSize = 30f
+    private var backgroundTextSize = 20f
     private var currentColor = Color.WHITE
-    private var normalColor = 0x99FFFFFF.toInt()
-    private var backgroundColor = 0x80FFFFFF.toInt()
-    private var lineGap = 30f
+    private var normalColor = 0x66FFFFFF
+    private var backgroundColor = 0x66FFFFFF
+    private var lineGap = 12f
     private var scrollOffset = 0f
     private var targetOffset = 0f
     private var animator: ValueAnimator? = null
@@ -60,7 +67,6 @@ class TtmlLyricsView @JvmOverloads constructor(
 
     init {
         setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-        paint.textSize = currentTextSize
         paint.typeface = Typeface.DEFAULT_BOLD
     }
 
@@ -75,6 +81,7 @@ class TtmlLyricsView @JvmOverloads constructor(
         invalidate()
     }
 
+    /** Values are pixels, matching the existing LyricsFragment API. */
     fun setTextSizes(current: Float, normal: Float) {
         currentTextSize = current
         normalTextSize = normal
@@ -113,9 +120,7 @@ class TtmlLyricsView @JvmOverloads constructor(
         val nextLine = findLine(currentTime, items)
         if (nextLine != currentLine) {
             currentLine = nextLine
-            if (System.currentTimeMillis() >= manualScrollUntil) {
-                animateToCurrentLine()
-            }
+            if (System.currentTimeMillis() >= manualScrollUntil) animateToCurrentLine()
         }
         invalidate()
     }
@@ -136,84 +141,120 @@ class TtmlLyricsView @JvmOverloads constructor(
         return result
     }
 
+    // Lines with the same start time (e.g. duet voices) remain active together.
     private fun isLineActive(index: Int, line: TtmlLine): Boolean {
         val items = lyrics?.lines ?: return index == currentLine
-        val nextStart = items.drop(index + 1)
-            .firstOrNull { it.startMs > line.startMs }?.startMs
+        val nextStart = items.drop(index + 1).firstOrNull { it.startMs > line.startMs }?.startMs
         val effectiveEnd = line.endMs ?: nextStart
         return currentTime >= line.startMs &&
             (effectiveEnd == null || currentTime < effectiveEnd)
     }
 
-    private fun buildLayout(line: TtmlLine, index: Int): StaticLayout {
-        val activeLine = isLineActive(index, line)
+    private fun hasWordTiming(line: TtmlLine): Boolean {
+        val starts = line.segments.filterNot { it.isBackground }
+            .mapNotNull { it.startMs }.distinct()
+        return starts.size > 1 || lyrics?.timingMode.equals("Word", ignoreCase = true) &&
+            line.segments.any { !it.isBackground && it.startMs != null }
+    }
+
+    private fun makeSegmentLayout(
+        segments: List<TtmlSegment>,
+        fallbackText: String,
+        textPaint: TextPaint,
+        activeLine: Boolean,
+        activeTint: Int,
+        line: TtmlLine,
+        wordTiming: Boolean
+    ): StaticLayout {
         val builder = SpannableStringBuilder()
-        paint.textSize = if (activeLine) currentTextSize else normalTextSize
-        paint.typeface = Typeface.DEFAULT_BOLD
-        paint.color = normalColor
-        if (line.segments.isEmpty()) {
-            builder.append(line.text)
+        if (segments.isEmpty()) {
+            builder.append(fallbackText)
             if (activeLine && builder.isNotEmpty()) {
-                builder.setSpan(ForegroundColorSpan(currentColor), 0, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                builder.setSpan(
+                    ForegroundColorSpan(activeTint),
+                    0, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
             }
         } else {
-            line.segments.forEachIndexed { segmentIndex, segment ->
+            segments.forEachIndexed { index, segment ->
                 val start = builder.length
                 builder.append(segment.text)
                 val end = builder.length
-                if (end > start) {
-                    val nextStart = line.segments.drop(segmentIndex + 1)
-                        .firstNotNullOfOrNull { it.startMs }
-                    val effectiveEnd = segment.endMs ?: nextStart ?: line.endMs
-                    val segmentActive = activeLine &&
-                        segment.startMs != null &&
-                        currentTime >= segment.startMs &&
-                        (effectiveEnd == null || currentTime < effectiveEnd)
-                    val progress = when {
-                        segment.startMs == null -> if (activeLine) 1f else 0f
-                        currentTime < segment.startMs -> 0f
-                        effectiveEnd != null && effectiveEnd > segment.startMs ->
-                            ((currentTime - segment.startMs).toFloat() /
-                                (effectiveEnd - segment.startMs).toFloat()).coerceIn(0f, 1f)
-                        else -> if (segmentActive) 1f else 0f
-                    }
-                    // Keep normal text shaping/kerning across adjacent TTML spans.
-                    // ReplacementSpan draws each fragment independently and makes
-                    // syllables look visually disconnected.
-                    val startX = paint.measureText(builder, 0, start)
-                    val segmentWidth = paint.measureText(segment.text).coerceAtLeast(1f)
-                    builder.setSpan(
-                        ProgressiveFillCharacterSpan(
-                            baseColor = if (segment.isBackground) backgroundColor else normalColor,
-                            activeColor = currentColor,
-                            progress = if (activeLine) progress else 0f,
-                            startX = startX,
-                            endX = startX + segmentWidth
-                        ),
-                        start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                    if (segment.isBackground) {
-                        builder.setSpan(
-                            RelativeSizeSpan(0.68f),
-                            start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                        )
-                    }
+                if (end <= start) return@forEachIndexed
+
+                val nextTimedStart = segments.drop(index + 1).firstNotNullOfOrNull {
+                    it.startMs?.takeIf { next -> segment.startMs == null || next > segment.startMs }
                 }
+                val segmentEnd = segment.endMs ?: nextTimedStart ?: line.endMs
+                val progress = when {
+                    !activeLine -> 0f
+                    !wordTiming -> 1f
+                    segment.startMs == null -> 0f
+                    currentTime < segment.startMs -> 0f
+                    segmentEnd != null && segmentEnd > segment.startMs ->
+                        ((currentTime - segment.startMs).toFloat() /
+                            (segmentEnd - segment.startMs).toFloat()).coerceIn(0f, 1f)
+                    else -> 1f
+                }
+
+                val startX = textPaint.measureText(builder, 0, start)
+                val segmentWidth = textPaint.measureText(segment.text).coerceAtLeast(1f)
+                builder.setSpan(
+                    ProgressiveFillCharacterSpan(
+                        baseColor = textPaint.color,
+                        activeColor = activeTint,
+                        progress = progress,
+                        startX = startX,
+                        endX = startX + segmentWidth
+                    ),
+                    start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
             }
         }
-        val alignment = if (line.alignment == TtmlAlignment.RIGHT) {
-            Layout.Alignment.ALIGN_OPPOSITE
-        } else {
-            Layout.Alignment.ALIGN_NORMAL
-        }
+
         val contentWidth = max(1, width - paddingLeft - paddingRight)
-        val hasMultipleVoices = (lyrics?.lines?.mapNotNull { it.agent }?.distinct()?.size ?: 0) > 1
-        val layoutWidth = (contentWidth * if (hasMultipleVoices) 0.7f else 1f).toInt().coerceAtLeast(1)
-        return StaticLayout.Builder.obtain(builder, 0, builder.length, paint, layoutWidth)
-            .setAlignment(alignment)
+        val multipleVoices = (lyrics?.lines?.mapNotNull { it.agent }?.distinct()?.size ?: 0) > 1
+        val layoutWidth = (contentWidth * if (multipleVoices) 0.7f else 1f).toInt().coerceAtLeast(1)
+        return StaticLayout.Builder.obtain(builder, 0, builder.length, textPaint, layoutWidth)
+            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
             .setIncludePad(false)
-            .setLineSpacing(0f, 1.12f)
+            .setLineSpacing(if (textPaint.textSize <= backgroundTextSize * density + 1f) 8f * density else 10f * density, 1f)
             .build()
+    }
+
+    private fun buildLayout(line: TtmlLine, index: Int): RenderedLine {
+        val active = isLineActive(index, line)
+        val wordTiming = hasWordTiming(line)
+        val mainSegments = line.segments.filterNot { it.isBackground }
+        val backgroundSegments = line.segments.filter { it.isBackground }
+
+        val mainPaint = TextPaint(paint).apply {
+            textSize = if (active) currentTextSize else normalTextSize
+            typeface = Typeface.DEFAULT_BOLD
+            color = normalColor
+            shader = null
+        }
+        val mainFallback = if (mainSegments.isEmpty() && backgroundSegments.isEmpty()) line.text else ""
+        val main = makeSegmentLayout(
+            mainSegments, mainFallback, mainPaint, active, currentColor, line, wordTiming
+        )
+
+        val background = if (active && backgroundSegments.isNotEmpty()) {
+            val secondaryPaint = TextPaint(paint).apply {
+                textSize = backgroundTextSize * density
+                typeface = Typeface.DEFAULT_BOLD
+                color = backgroundColor
+                shader = null
+            }
+            makeSegmentLayout(
+                backgroundSegments, "", secondaryPaint, true,
+                (currentColor and 0x00FFFFFF) or 0x99000000.toInt(),
+                line, wordTiming
+            )
+        } else null
+
+        val gap = if (background != null) (2f * density).roundToInt() else 0
+        return RenderedLine(main, background, main.height + gap + (background?.height ?: 0))
     }
 
     private fun lineTopPositions(items: List<TtmlLine>): FloatArray {
@@ -230,8 +271,8 @@ class TtmlLyricsView @JvmOverloads constructor(
         val items = lyrics?.lines ?: return
         if (currentLine !in items.indices || height == 0) return
         val tops = lineTopPositions(items)
-        val layout = buildLayout(items[currentLine], currentLine)
-        val desired = tops[currentLine] + layout.height / 2f - height / 2f
+        val desired = tops[currentLine] + buildLayout(items[currentLine], currentLine).height / 2f -
+            (height - paddingTop - paddingBottom) / 2f
         targetOffset = desired.coerceAtLeast(0f)
         animator?.cancel()
         animator = ValueAnimator.ofFloat(scrollOffset, targetOffset).apply {
@@ -250,19 +291,48 @@ class TtmlLyricsView @JvmOverloads constructor(
         val items = lyrics?.lines ?: return
         if (items.isEmpty()) return
         val tops = lineTopPositions(items)
+        val contentWidth = max(1, width - paddingLeft - paddingRight)
+        val multipleVoices = (items.mapNotNull { it.agent }.distinct().size) > 1
+        val layoutWidth = (contentWidth * if (multipleVoices) 0.7f else 1f).toInt().coerceAtLeast(1)
+
         items.forEachIndexed { index, line ->
-            val layout = buildLayout(line, index)
+            val rendered = buildLayout(line, index)
             val y = paddingTop + tops[index] - scrollOffset
-            if (y + layout.height < 0 || y > height) return@forEachIndexed
-            val contentWidth = max(1, width - paddingLeft - paddingRight)
-            val horizontalOffset = if (line.alignment == TtmlAlignment.RIGHT) {
-                contentWidth - layout.width
-            } else {
-                0
+            if (y + rendered.height < 0 || y > height) return@forEachIndexed
+
+            val active = isLineActive(index, line)
+            val distance = abs(index - currentLine)
+            val alpha = when (distance) {
+                0 -> 1f
+                1 -> 0.75f
+                2 -> 0.5f
+                else -> 0.28f
             }
+            val left = if (line.alignment == TtmlAlignment.RIGHT) {
+                paddingLeft + contentWidth - layoutWidth
+            } else {
+                paddingLeft
+            }
+            val pivotX = if (line.alignment == TtmlAlignment.RIGHT) layoutWidth.toFloat() else 0f
+
             canvas.save()
-            canvas.translate((paddingLeft + horizontalOffset).toFloat(), y)
-            layout.draw(canvas)
+            canvas.saveLayerAlpha(
+                left.toFloat(), y, (left + layoutWidth).toFloat(), y + rendered.height,
+                (alpha * 255).roundToInt()
+            )
+            if (active) {
+                canvas.translate(left + pivotX, y + rendered.height / 2f)
+                canvas.scale(1.05f, 1.05f)
+                canvas.translate(-pivotX, -rendered.height / 2f)
+            } else {
+                canvas.translate(left.toFloat(), y)
+            }
+            rendered.main.draw(canvas)
+            rendered.background?.let {
+                canvas.translate(0f, rendered.main.height + 2f * density)
+                it.draw(canvas)
+            }
+            canvas.restore()
             canvas.restore()
         }
     }
@@ -278,7 +348,7 @@ class TtmlLyricsView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_MOVE -> {
                 val delta = lastY - event.y
-                if (kotlin.math.abs(event.y - downY) > 8f * density) dragging = true
+                if (abs(event.y - downY) > 8f * density) dragging = true
                 if (dragging) {
                     scrollOffset = (scrollOffset + delta).coerceAtLeast(0f)
                     manualScrollUntil = System.currentTimeMillis() + 4500L
@@ -299,9 +369,7 @@ class TtmlLyricsView @JvmOverloads constructor(
                 } else {
                     manualScrollUntil = System.currentTimeMillis() + 4500L
                     postDelayed({
-                        if (System.currentTimeMillis() >= manualScrollUntil) {
-                            animateToCurrentLine()
-                        }
+                        if (System.currentTimeMillis() >= manualScrollUntil) animateToCurrentLine()
                     }, 4550L)
                 }
                 performClick()
@@ -318,11 +386,8 @@ class TtmlLyricsView @JvmOverloads constructor(
     }
 }
 
-
-/**
- * Applies karaoke fill as a draw-state shader rather than replacing the glyph run.
- * CharacterStyle preserves Android's text shaping and kerning across TTML spans.
- */
+/** Progressive fill is applied as a character style so adjacent TTML spans
+ * keep Android's normal glyph shaping and kerning. */
 private class ProgressiveFillCharacterSpan(
     private val baseColor: Int,
     private val activeColor: Int,
