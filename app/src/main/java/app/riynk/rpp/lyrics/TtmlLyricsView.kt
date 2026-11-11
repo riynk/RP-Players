@@ -8,6 +8,7 @@ import android.graphics.Paint
 import android.text.Layout
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.style.RelativeSizeSpan
