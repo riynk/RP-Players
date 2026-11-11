@@ -10,13 +10,14 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.StaticLayout
 import android.text.TextPaint
-import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
+import android.text.style.ReplacementSpan
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * TTML renderer with timed segment highlighting, agent-based left/right alignment,
@@ -35,6 +36,8 @@ class TtmlLyricsView @JvmOverloads constructor(
     private var lyrics: TtmlLyrics? = null
     private var currentLine = -1
     private var currentTime = 0L
+    private var playbackPositionMs = 0L
+    private var playbackRate = 1f
     private var currentTextSize = 38f
     private var normalTextSize = 30f
     private var currentColor = Color.WHITE
@@ -54,6 +57,7 @@ class TtmlLyricsView @JvmOverloads constructor(
     init {
         setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         paint.textSize = currentTextSize
+        paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
     }
 
     fun setLyrics(value: TtmlLyrics?) {
@@ -61,6 +65,7 @@ class TtmlLyricsView @JvmOverloads constructor(
         lyrics = value
         currentLine = -1
         currentTime = 0L
+        playbackPositionMs = 0L
         scrollOffset = 0f
         targetOffset = 0f
         invalidate()
@@ -91,8 +96,14 @@ class TtmlLyricsView @JvmOverloads constructor(
         seekListener = listener
     }
 
+    fun setPlaybackRate(rate: Float) {
+        playbackRate = rate.coerceIn(0.5f, 2.0f)
+        updateTime(playbackPositionMs)
+    }
+
     fun updateTime(timeMs: Long) {
-        currentTime = timeMs.coerceAtLeast(0L)
+        playbackPositionMs = timeMs.coerceAtLeast(0L)
+        currentTime = (playbackPositionMs * playbackRate).toLong().coerceAtLeast(0L)
         val items = lyrics?.lines ?: return
         if (items.isEmpty()) return
         val nextLine = findLine(currentTime, items)
@@ -152,11 +163,19 @@ class TtmlLyricsView @JvmOverloads constructor(
                         segment.startMs != null &&
                         currentTime >= segment.startMs &&
                         (effectiveEnd == null || currentTime < effectiveEnd)
+                    val progress = when {
+                        segment.startMs == null -> if (activeLine) 1f else 0f
+                        currentTime < segment.startMs -> 0f
+                        effectiveEnd != null && effectiveEnd > segment.startMs ->
+                            ((currentTime - segment.startMs).toFloat() /
+                                (effectiveEnd - segment.startMs).toFloat()).coerceIn(0f, 1f)
+                        else -> if (segmentActive) 1f else 0f
+                    }
                     builder.setSpan(
-                        ForegroundColorSpan(
-                            if (segmentActive) currentColor
-                            else if (segment.isBackground) backgroundColor
-                            else normalColor
+                        ProgressiveFillSpan(
+                            baseColor = if (segment.isBackground) backgroundColor else normalColor,
+                            activeColor = if (segment.isBackground) currentColor else currentColor,
+                            progress = if (activeLine) progress else 0f
                         ),
                         start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
@@ -284,5 +303,57 @@ class TtmlLyricsView @JvmOverloads constructor(
     override fun performClick(): Boolean {
         super.performClick()
         return true
+    }
+}
+
+
+/**
+ * Draws the inactive lyric first, then reveals the active color progressively
+ * across the segment according to the source timestamps.
+ */
+private class ProgressiveFillSpan(
+    private val baseColor: Int,
+    private val activeColor: Int,
+    private val progress: Float
+) : ReplacementSpan() {
+    override fun getSize(
+        paint: Paint,
+        text: CharSequence,
+        start: Int,
+        end: Int,
+        fm: Paint.FontMetricsInt?
+    ): Int = paint.measureText(text, start, end).roundToInt()
+
+    override fun draw(
+        canvas: Canvas,
+        text: CharSequence,
+        start: Int,
+        end: Int,
+        x: Float,
+        top: Int,
+        y: Int,
+        bottom: Int,
+        paint: Paint
+    ) {
+        val width = paint.measureText(text, start, end)
+        val oldColor = paint.color
+        val oldShader = paint.shader
+        paint.shader = null
+        paint.color = baseColor
+        canvas.drawText(text, start, end, x, y.toFloat(), paint)
+        if (progress > 0f && width > 0f) {
+            canvas.save()
+            canvas.clipRect(
+                x,
+                y + paint.ascent(),
+                x + width * progress.coerceIn(0f, 1f),
+                y + paint.descent()
+            )
+            paint.color = activeColor
+            canvas.drawText(text, start, end, x, y.toFloat(), paint)
+            canvas.restore()
+        }
+        paint.color = oldColor
+        paint.shader = oldShader
     }
 }
