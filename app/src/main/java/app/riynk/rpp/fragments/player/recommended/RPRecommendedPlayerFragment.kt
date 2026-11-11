@@ -3,11 +3,9 @@ package app.riynk.rpp.fragments.player.recommended
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
-import androidx.preference.PreferenceManager
 import app.riynk.rpp.NEW_BLUR_AMOUNT
 import app.riynk.rpp.LYRICS_TYPE
 import app.riynk.rpp.SHOW_LYRICS
@@ -16,9 +14,7 @@ import app.riynk.rpp.fragments.player.normal.PlayerFragment
 import app.riynk.rpp.glide.BlurTransformation
 import app.riynk.rpp.glide.RetroGlideExtension
 import app.riynk.rpp.glide.RetroGlideExtension.simpleSongCoverOptions
-import app.riynk.rpp.glide.crossfadeListener
 import app.riynk.rpp.helper.MusicPlayerRemote
-import app.riynk.rpp.model.Song
 import app.riynk.rpp.util.CoverLyricsType
 import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.PreferenceUtil.blurAmount
