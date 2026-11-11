@@ -16,6 +16,10 @@ package app.riynk.rpp.fragments.lyrics
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.widget.ImageView
 import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
@@ -34,6 +38,7 @@ import androidx.transition.Fade
 import code.name.monkey.appthemehelper.common.ATHToolbarActivity
 import code.name.monkey.appthemehelper.util.ToolbarContentTintHelper
 import code.name.monkey.appthemehelper.util.VersionUtils
+import app.riynk.rpp.NEW_BLUR_AMOUNT
 import app.riynk.rpp.R
 import app.riynk.rpp.activities.tageditor.TagWriter
 import app.riynk.rpp.databinding.FragmentLyricsBinding
@@ -42,6 +47,10 @@ import app.riynk.rpp.extensions.materialDialog
 import app.riynk.rpp.extensions.openUrl
 import app.riynk.rpp.extensions.uri
 import app.riynk.rpp.fragments.base.AbsMainActivityFragment
+import app.riynk.rpp.glide.BlurTransformation
+import app.riynk.rpp.glide.RetroGlideExtension
+import app.riynk.rpp.glide.RetroGlideExtension.simpleSongCoverOptions
+import app.riynk.rpp.glide.crossfadeListener
 import app.riynk.rpp.helper.MusicPlayerRemote
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.lyrics.LrcView
@@ -52,8 +61,11 @@ import app.riynk.rpp.model.Song
 import app.riynk.rpp.util.FileUtils
 import app.riynk.rpp.util.LyricUtil
 import app.riynk.rpp.util.PreferenceUtil
+import app.riynk.rpp.util.PreferenceUtil.blurAmount
 import app.riynk.rpp.util.UriUtil
 import com.afollestad.materialdialogs.input.input
+import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -91,6 +103,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         }
 
     private lateinit var updateHelper: MusicProgressViewUpdateHelper
+    private var lastBackgroundRequest: RequestBuilder<Drawable>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -212,10 +225,31 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
     private fun updateTitleSong() {
         song = MusicPlayerRemote.currentSong
         if (_binding != null) {
+            updateLyricsBackground()
             binding.toolbar.title =
                 if (PreferenceUtil.isRpLyrics) song.title else getString(R.string.lyrics)
             binding.toolbar.subtitle = if (PreferenceUtil.isRpLyrics) song.artistName else null
         }
+    }
+
+
+    private fun updateLyricsBackground() {
+        if (_binding == null || !isAdded) return
+        val target: ImageView = binding.colorBackground
+        Glide.with(this)
+            .load(RetroGlideExtension.getSongModel(song))
+            .simpleSongCoverOptions(song)
+            .transform(
+                BlurTransformation.Builder(requireContext())
+                    .blurRadius(blurAmount.toFloat())
+                    .build()
+            )
+            .thumbnail(lastBackgroundRequest)
+            .error(Glide.with(this).load(ColorDrawable(Color.DKGRAY)).fitCenter())
+            .also {
+                lastBackgroundRequest = it.clone()
+                it.crossfadeListener().into(target)
+            }
     }
 
     private fun setupToolbar() {
@@ -463,6 +497,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         sharedPreferences: SharedPreferences,
         key: String?
     ) {
+        if (key == NEW_BLUR_AMOUNT) updateLyricsBackground()
         if (key != null && key in setOf(
                 "rp_lyrics_main_text_size",
                 "rp_lyrics_background_text_size",
@@ -477,6 +512,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         super.onDestroyView()
         if (MusicPlayerRemote.playingQueue.isNotEmpty())
             mainActivity.expandPanel()
+        lastBackgroundRequest = null
         _binding = null
     }
 
