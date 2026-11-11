@@ -173,8 +173,6 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentPlayerAlbumCoverBinding.bind(view)
-        // RP Recommended renders its lyric preview in a dedicated area below the artwork.
-        binding.coverLyrics.isVisible = PreferenceUtil.nowPlayingScreen != RPRecommended
         setupViewPager()
         progressViewUpdateHelper = MusicProgressViewUpdateHelper(this, 500, 1000)
         maybeInitLyrics()
