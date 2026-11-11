@@ -18,8 +18,10 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
@@ -234,9 +236,11 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
                 parent.clipToPadding = false
                 parent = parent.parent
             }
-            binding.coverLyrics.layoutParams = binding.coverLyrics.layoutParams.apply {
-                height = if (visible) belowArtworkHeight else ViewGroup.LayoutParams.MATCH_PARENT
-            }
+            val belowArtworkParams = binding.coverLyrics.layoutParams as FrameLayout.LayoutParams
+            belowArtworkParams.height =
+                if (visible) belowArtworkHeight else ViewGroup.LayoutParams.MATCH_PARENT
+            belowArtworkParams.gravity = if (visible) Gravity.TOP else Gravity.CENTER_VERTICAL
+            binding.coverLyrics.layoutParams = belowArtworkParams
             binding.coverLyrics.translationY =
                 if (visible) binding.root.height.toFloat() else 0f
             binding.coverLyrics.isVisible = visible
@@ -252,9 +256,10 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
         }
 
         binding.coverLyrics.translationY = 0f
-        binding.coverLyrics.layoutParams = binding.coverLyrics.layoutParams.apply {
-            height = ViewGroup.LayoutParams.MATCH_PARENT
-        }
+        val coverLyricsParams = binding.coverLyrics.layoutParams as FrameLayout.LayoutParams
+        coverLyricsParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+        coverLyricsParams.gravity = Gravity.CENTER_VERTICAL
+        binding.coverLyrics.layoutParams = coverLyricsParams
         val lyrics: View = if (PreferenceUtil.lyricsType == CoverLyricsType.REPLACE_COVER) {
             ObjectAnimator.ofFloat(viewPager, View.ALPHA, if (visible) 0F else 1F).start()
             lrcView
