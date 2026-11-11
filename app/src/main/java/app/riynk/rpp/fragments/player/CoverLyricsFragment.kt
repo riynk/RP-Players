@@ -23,16 +23,12 @@ import app.riynk.rpp.lyrics.LyricsRepository
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.model.lyrics.AbsSynchronizedLyrics
 import app.riynk.rpp.model.lyrics.Lyrics
-import app.riynk.rpp.util.LyricUtil
 import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.color.MediaNotificationProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
-import org.jaudiotagger.audio.exceptions.CannotReadException
-import java.io.File
-import java.io.FileNotFoundException
 
 class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyrics),
     MusicProgressViewUpdateHelper.Callback, SharedPreferences.OnSharedPreferenceChangeListener {
