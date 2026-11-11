@@ -275,6 +275,16 @@ class TtmlLyricsView @JvmOverloads constructor(
         return tops
     }
 
+    private fun maxScrollOffset(items: List<TtmlLine>, tops: FloatArray): Float {
+        if (items.isEmpty() || height == 0) return 0f
+        val lastIndex = items.lastIndex
+        val contentBottom = tops[lastIndex] + buildLayout(items[lastIndex], lastIndex).height
+        val viewport = (height - paddingTop - paddingBottom).coerceAtLeast(0)
+        // Leave enough trailing scroll space to keep the final active line near
+        // the same upper-third position used throughout playback.
+        return (contentBottom - viewport / 3f).coerceAtLeast(0f)
+    }
+
     private fun animateToCurrentLine() {
         val items = lyrics?.lines ?: return
         if (currentLine !in items.indices || height == 0) return
@@ -282,7 +292,7 @@ class TtmlLyricsView @JvmOverloads constructor(
         // Local Player keeps the active lyric around the upper third of the viewport.
         val desired = tops[currentLine] + buildLayout(items[currentLine], currentLine).height / 2f -
             (height - paddingTop - paddingBottom) / 3f
-        targetOffset = desired.coerceAtLeast(0f)
+        targetOffset = desired.coerceIn(0f, maxScrollOffset(items, tops))
         animator?.cancel()
         animator = ValueAnimator.ofFloat(scrollOffset, targetOffset).apply {
             duration = 320L
@@ -359,7 +369,11 @@ class TtmlLyricsView @JvmOverloads constructor(
                 val delta = lastY - event.y
                 if (abs(event.y - downY) > 8f * density) dragging = true
                 if (dragging) {
-                    scrollOffset = (scrollOffset + delta).coerceAtLeast(0f)
+                    val items = lyrics?.lines.orEmpty()
+                    val tops = lineTopPositions(items)
+                    scrollOffset = (scrollOffset + delta).coerceIn(
+                        0f, maxScrollOffset(items, tops)
+                    )
                     manualScrollUntil = System.currentTimeMillis() + 4500L
                     invalidate()
                 }
