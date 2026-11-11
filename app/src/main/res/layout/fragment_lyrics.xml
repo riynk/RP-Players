@@ -69,6 +69,16 @@
             app:lrcTextGravity="left"
             app:lrcTextSize="28sp" />
 
+        <app.riynk.rpp.lyrics.TtmlLyricsView
+            android:id="@+id/ttmlLyricsView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/noLyricsFound"
             android:layout_width="match_parent"
