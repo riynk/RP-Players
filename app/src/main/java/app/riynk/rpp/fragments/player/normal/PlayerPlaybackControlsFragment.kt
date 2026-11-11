@@ -119,7 +119,18 @@ open class PlayerPlaybackControlsFragment(
         binding.title.text = song.title
         binding.text.text = song.artistName
 
-        if (PreferenceUtil.isSongInfo) {
+        val recommendedMetadata = requireActivity().findViewById<View>(R.id.rpRecommendedMetadata)
+        if (recommendedMetadata != null) {
+            recommendedMetadata.findViewById<TextView>(R.id.rpSongTitle)?.text = song.title
+            recommendedMetadata.findViewById<TextView>(R.id.rpSongArtist)?.text = song.artistName
+            recommendedMetadata.findViewById<TextView>(R.id.rpSongAlbum)?.apply {
+                text = song.albumName.takeIf { it.isNotBlank() } ?: song.albumArtist.orEmpty()
+                visibility = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
+            }
+            binding.title.hide()
+            binding.text.hide()
+            binding.songInfo.hide()
+        } else if (PreferenceUtil.isSongInfo) {
             binding.songInfo.text = getSongInfo(song)
             binding.songInfo.show()
         } else {
