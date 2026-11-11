@@ -91,17 +91,7 @@
             app:layout_constraintTop_toBottomOf="@id/rpSongArtist"
             tools:text="Hold On · Single" />
 
-        <ImageView
-            android:id="@+id/rpCastButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:contentDescription="@string/cast"
-            android:padding="8dp"
-            android:src="@drawable/ic_cast"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/rpSongTitle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/rpSongTitle" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.fragment.app.FragmentContainerView
