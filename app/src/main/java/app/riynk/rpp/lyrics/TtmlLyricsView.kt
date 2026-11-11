@@ -220,11 +220,17 @@ class TtmlLyricsView @JvmOverloads constructor(
             }
         }
 
+        // Duet/agent lyrics still receive the full available width. A fixed
+        // 70% column made long left/right passages wrap prematurely and appear
+        // clipped. StaticLayout grows vertically as either passage wraps.
         val contentWidth = max(1, width - paddingLeft - paddingRight)
-        val multipleVoices = (lyrics?.lines?.mapNotNull { it.agent }?.distinct()?.size ?: 0) > 1
-        val layoutWidth = (contentWidth * if (multipleVoices) 0.7f else 1f).toInt().coerceAtLeast(1)
-        return StaticLayout.Builder.obtain(builder, 0, builder.length, textPaint, layoutWidth)
-            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+        val alignment = if (line.alignment == TtmlAlignment.RIGHT) {
+            Layout.Alignment.ALIGN_OPPOSITE
+        } else {
+            Layout.Alignment.ALIGN_NORMAL
+        }
+        return StaticLayout.Builder.obtain(builder, 0, builder.length, textPaint, contentWidth)
+            .setAlignment(alignment)
             .setIncludePad(false)
             .setLineSpacing(if (textPaint.textSize <= backgroundTextSize * density + 1f) 8f * density else 10f * density, 1f)
             .build()
@@ -311,8 +317,7 @@ class TtmlLyricsView @JvmOverloads constructor(
         if (items.isEmpty()) return
         val tops = lineTopPositions(items)
         val contentWidth = max(1, width - paddingLeft - paddingRight)
-        val multipleVoices = (items.mapNotNull { it.agent }.distinct().size) > 1
-        val layoutWidth = (contentWidth * if (multipleVoices) 0.7f else 1f).toInt().coerceAtLeast(1)
+        val layoutWidth = contentWidth
 
         items.forEachIndexed { index, line ->
             val rendered = buildLayout(line, index)
@@ -335,8 +340,10 @@ class TtmlLyricsView @JvmOverloads constructor(
             val pivotX = if (line.alignment == TtmlAlignment.RIGHT) layoutWidth.toFloat() else 0f
 
             canvas.save()
+            val scaleInset = if (active) 8f * density else 0f
             canvas.saveLayerAlpha(
-                left.toFloat(), y, (left + layoutWidth).toFloat(), y + rendered.height,
+                left - scaleInset, y - scaleInset,
+                left + layoutWidth + scaleInset, y + rendered.height + scaleInset,
                 (alpha * 255).roundToInt()
             )
             if (active) {
