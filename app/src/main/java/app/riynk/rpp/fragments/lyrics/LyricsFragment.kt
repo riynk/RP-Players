@@ -43,6 +43,7 @@ import app.riynk.rpp.fragments.base.AbsMainActivityFragment
 import app.riynk.rpp.helper.MusicPlayerRemote
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.lyrics.LrcView
+import app.riynk.rpp.lyrics.TtmlLyricsParser
 import app.riynk.rpp.model.AudioTagInfo
 import app.riynk.rpp.model.Song
 import app.riynk.rpp.util.FileUtils
@@ -50,7 +51,9 @@ import app.riynk.rpp.util.LyricUtil
 import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.UriUtil
 import com.afollestad.materialdialogs.input.input
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import java.io.File
@@ -137,6 +140,15 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
                 resources.displayMetrics
             )
         )
+        binding.ttmlLyricsView.setTextSizes(
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, currentTextSize, resources.displayMetrics),
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, normalTextSize, resources.displayMetrics)
+        )
+        binding.ttmlLyricsView.setCurrentColor(accentColor())
+        binding.ttmlLyricsView.setNormalColor(0x99FFFFFF.toInt())
+        binding.ttmlLyricsView.setOnSeekListener {
+            MusicPlayerRemote.seekTo(it.toInt())
+        }
         binding.lyricsView.apply {
             setCurrentColor(accentColor())
             setTimeTextColor(accentColor())
@@ -151,6 +163,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
 
     override fun onUpdateProgressViews(progress: Int, total: Int) {
         binding.lyricsView.updateTime(progress.toLong())
+        binding.ttmlLyricsView.updateTime(progress.toLong())
     }
 
     private fun setupViews() {
@@ -362,15 +375,39 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
     }
 
     private fun loadLyrics() {
-        lyricsType = if (!loadLRCLyrics()) {
-            binding.lyricsView.isVisible = false
-            loadNormalLyrics()
-            LyricsType.NORMAL_LYRICS
-        } else {
-            binding.normalLyrics.isVisible = false
-            binding.noLyricsFound.isVisible = false
-            binding.lyricsView.isVisible = true
-            LyricsType.SYNCED_LYRICS
+        val currentSong = song
+        viewLifecycleOwner.lifecycleScope.launch {
+            val ttml = withContext(Dispatchers.IO) {
+                val sidecar = LyricUtil.getSyncedLyricsTtmlFile(currentSong)
+                    ?.let { runCatching { it.readText() }.getOrNull() }
+                val source = sidecar ?: LyricUtil.getEmbeddedTtmlLyrics(currentSong.data)
+                source?.let { TtmlLyricsParser.parse(it) }
+            }
+
+            if (_binding == null) return@launch
+            if (ttml?.isValid == true) {
+                binding.ttmlLyricsView.setLyrics(ttml)
+                binding.ttmlLyricsView.updateTime(MusicPlayerRemote.position.toLong())
+                binding.ttmlLyricsView.isVisible = true
+                binding.lyricsView.isVisible = false
+                binding.normalLyrics.isVisible = false
+                binding.noLyricsFound.isVisible = false
+                lyricsType = LyricsType.SYNCED_LYRICS
+                return@launch
+            }
+
+            binding.ttmlLyricsView.setLyrics(null)
+            binding.ttmlLyricsView.isVisible = false
+            lyricsType = if (!loadLRCLyrics()) {
+                binding.lyricsView.isVisible = false
+                loadNormalLyrics()
+                LyricsType.NORMAL_LYRICS
+            } else {
+                binding.normalLyrics.isVisible = false
+                binding.noLyricsFound.isVisible = false
+                binding.lyricsView.isVisible = true
+                LyricsType.SYNCED_LYRICS
+            }
         }
     }
 
