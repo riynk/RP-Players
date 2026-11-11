@@ -15,7 +15,7 @@ data class TtmlLyrics(
     val lines: List<TtmlLine>,
     val timingMode: String = "Line"
 ) {
-    val isValid: Boolean get() = lines.any { it.text.isNotBlank() }
+    val isValid: Boolean get() = lines.any { it.text.isNotBlank() && it.hasTiming }
 }
 
 data class TtmlLine(
@@ -24,7 +24,8 @@ data class TtmlLine(
     val text: String,
     val agent: String?,
     val alignment: TtmlAlignment,
-    val segments: List<TtmlSegment>
+    val segments: List<TtmlSegment>,
+    val hasTiming: Boolean
 )
 
 data class TtmlSegment(
@@ -106,7 +107,10 @@ object TtmlLyricsParser {
             TtmlAlignment.LEFT
         }
 
-        val parsed = parseChildren(parser, "p", lineStart, lineEnd, false, frameRate, tickRate)
+        val parsed = parseChildren(
+            parser, "p", if (beginRaw != null) lineStart else null,
+            lineEnd, false, frameRate, tickRate
+        )
         val text = parsed.text.toString()
         if (text.isBlank()) return null
 
@@ -121,7 +125,9 @@ object TtmlLyricsParser {
             alignment = alignment,
             segments = if (segments.isEmpty()) {
                 listOf(TtmlSegment(text, lineStart, lineEnd, false))
-            } else segments
+            } else segments,
+            hasTiming = beginRaw != null || endRaw != null || durRaw != null ||
+                segments.any { it.startMs != null || it.endMs != null }
         )
     }
 
