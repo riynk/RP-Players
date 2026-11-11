@@ -1,6 +1,79 @@
 package app.riynk.rpp.fragments.player.recommended
 
+import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.view.View
+import android.widget.ImageView
+import androidx.preference.PreferenceManager
+import app.riynk.rpp.NEW_BLUR_AMOUNT
 import app.riynk.rpp.R
 import app.riynk.rpp.fragments.player.normal.PlayerFragment
+import app.riynk.rpp.glide.BlurTransformation
+import app.riynk.rpp.glide.RetroGlideExtension
+import app.riynk.rpp.glide.RetroGlideExtension.simpleSongCoverOptions
+import app.riynk.rpp.glide.crossfadeListener
+import app.riynk.rpp.helper.MusicPlayerRemote
+import app.riynk.rpp.model.Song
+import app.riynk.rpp.util.PreferenceUtil.blurAmount
+import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestBuilder
 
-class RPRecommendedPlayerFragment : PlayerFragment(R.layout.fragment_rp_recommended_player)
+class RPRecommendedPlayerFragment : PlayerFragment(R.layout.fragment_rp_recommended_player) {
+    private var backgroundImage: ImageView? = null
+    private var lastRequest: RequestBuilder<Drawable>? = null
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        backgroundImage = view.findViewById(R.id.colorBackground)
+        // Keep the palette tint subtle so the artwork blur remains visible underneath.
+        view.findViewById<View>(R.id.colorGradientBackground)?.alpha = 0.28f
+        updateBlur()
+    }
+
+    private fun updateBlur() {
+        val target = backgroundImage ?: return
+        if (!isAdded) return
+        Glide.with(this)
+            .load(RetroGlideExtension.getSongModel(MusicPlayerRemote.currentSong))
+            .simpleSongCoverOptions(MusicPlayerRemote.currentSong)
+            .transform(
+                BlurTransformation.Builder(requireContext())
+                    .blurRadius(blurAmount.toFloat())
+                    .build()
+            )
+            .thumbnail(lastRequest)
+            .error(Glide.with(this).load(ColorDrawable(Color.DKGRAY)).fitCenter())
+            .also {
+                lastRequest = it.clone()
+                it.crossfadeListener().into(target)
+            }
+    }
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        updateBlur()
+    }
+
+    override fun onPlayingMetaChanged() {
+        super.onPlayingMetaChanged()
+        updateBlur()
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
+        super.onSharedPreferenceChanged(sharedPreferences, key)
+        if (key == NEW_BLUR_AMOUNT) updateBlur()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        lastRequest = null
+    }
+
+    override fun onDestroyView() {
+        backgroundImage = null
+        super.onDestroyView()
+    }
+}
