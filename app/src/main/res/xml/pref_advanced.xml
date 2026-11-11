@@ -7,14 +7,18 @@
         android:layout="@layout/list_item_view"
         android:summary="@string/pref_summary_blacklist"
         android:title="@string/pref_header_blacklist"
-        app:icon="@drawable/ic_music_note_off" />
+       
+            app:icon="@drawable/ic_music_note_off"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
         android:defaultValue="false"
         android:key="whitelist_music"
         android:layout="@layout/list_item_view_switch"
         android:summary="@string/pref_summary_whitelist"
-        android:title="@string/pref_title_whitelist" app:icon="@drawable/ic_library_music" />
+        android:title="@string/pref_title_whitelist"
+            app:icon="@drawable/ic_library_music"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
         android:layout="@layout/preference_category_title"
@@ -29,7 +33,9 @@
             android:negativeButtonText="@null"
             android:positiveButtonText="@null"
             android:title="@string/pref_title_last_added_interval"
-            app:icon="@drawable/ic_playlist_add" />
+           
+            app:icon="@drawable/ic_playlist_add"
+        />
 
     </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
@@ -52,7 +58,9 @@
             android:layout="@layout/list_item_view_switch"
             android:summary="@string/pref_keep_pause_on_zero_volume_summary"
             android:title="@string/pref_keep_pause_on_zero_volume_title"
-            app:icon="@drawable/ic_pause" />
+           
+            app:icon="@drawable/ic_pause"
+        />
 
         <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
             android:defaultValue="false"
@@ -60,7 +68,9 @@
             android:layout="@layout/list_item_view_switch"
             android:summary="@string/pref_keep_screen_on_summary"
             android:title="@string/pref_keep_screen_on_title"
-            app:icon="@drawable/ic_settings_brightness" />
+           
+            app:icon="@drawable/ic_settings_brightness"
+        />
 
         <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
             android:defaultValue="false"
@@ -68,7 +78,9 @@
             android:layout="@layout/list_item_view_switch"
             android:summary="@string/pref_show_when_locked_summary"
             android:title="@string/pref_show_when_locked_title"
-            app:icon="@drawable/ic_screen_lock_portrait" />
+           
+            app:icon="@drawable/ic_screen_lock_portrait"
+        />
 
         <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESwitchPreference
             android:defaultValue="false"
@@ -76,7 +88,9 @@
             android:layout="@layout/list_item_view_switch"
             android:summary="@string/pref_save_last_directory_summary"
             android:title="@string/pref_save_last_directory_title"
-            app:icon="@drawable/ic_screen_lock_portrait" />
+           
+            app:icon="@drawable/ic_screen_lock_portrait"
+        />
 
 
     </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
@@ -89,5 +103,7 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:title="@string/pref_language_name"
-        app:icon="@drawable/ic_language" />
+       
+            app:icon="@drawable/ic_language"
+        />
 </androidx.preference.PreferenceScreen>
