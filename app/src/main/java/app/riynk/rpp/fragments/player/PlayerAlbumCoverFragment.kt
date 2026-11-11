@@ -241,7 +241,12 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
                 if (visible) binding.root.height.toFloat() else 0f
             binding.coverLyrics.isVisible = visible
             if (visible) {
-                (binding.root.parent as? View)?.bringToFront()
+                binding.root.post {
+                    if (_binding != null && PreferenceUtil.lyricsType == CoverLyricsType.BELOW_ARTWORK) {
+                        binding.coverLyrics.translationY = binding.root.height.toFloat()
+                        (binding.root.parent as? View)?.bringToFront()
+                    }
+                }
             }
             return
         }

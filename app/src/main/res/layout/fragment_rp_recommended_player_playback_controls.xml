@@ -44,7 +44,7 @@
         android:textColor="?android:attr/textColorSecondary"
         app:layout_constraintBottom_toBottomOf="@+id/progressSlider"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/progressSlider"
         tools:text="@tools:sample/date/hhmmss" />
 
     <com.google.android.material.textview.MaterialTextView
