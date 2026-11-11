@@ -131,15 +131,18 @@ class TtmlLyricsView @JvmOverloads constructor(
                 builder.setSpan(ForegroundColorSpan(currentColor), 0, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         } else {
-            line.segments.forEach { segment ->
+            line.segments.forEachIndexed { segmentIndex, segment ->
                 val start = builder.length
                 builder.append(segment.text)
                 val end = builder.length
                 if (end > start) {
+                    val nextStart = line.segments.drop(segmentIndex + 1)
+                        .firstNotNullOfOrNull { it.startMs }
+                    val effectiveEnd = segment.endMs ?: nextStart ?: line.endMs
                     val segmentActive = activeLine &&
                         segment.startMs != null &&
                         currentTime >= segment.startMs &&
-                        (segment.endMs == null || currentTime < segment.endMs)
+                        (effectiveEnd == null || currentTime < effectiveEnd)
                     builder.setSpan(
                         ForegroundColorSpan(
                             if (segmentActive) currentColor
@@ -246,6 +249,11 @@ class TtmlLyricsView @JvmOverloads constructor(
                     }
                 } else {
                     manualScrollUntil = System.currentTimeMillis() + 4500L
+                    postDelayed({
+                        if (System.currentTimeMillis() >= manualScrollUntil) {
+                            animateToCurrentLine()
+                        }
+                    }, 4550L)
                 }
                 performClick()
                 return true
