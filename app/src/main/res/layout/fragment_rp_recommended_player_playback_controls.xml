@@ -30,7 +30,7 @@
         style="@style/Widget.Retro.Slider"
         app:layout_constraintEnd_toStartOf="@id/songTotalTime"
         app:layout_constraintStart_toEndOf="@id/songCurrentProgress"
-        app:layout_constraintTop_toBottomOf="@id/songInfo"
+        app:layout_constraintTop_toTopOf="parent"
         tools:ignore="RtlHardcoded,UnusedAttribute"
         tools:progress="20" />
 
@@ -50,6 +50,7 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/title"
+        android:visibility="gone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
@@ -74,6 +75,7 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text"
+        android:visibility="gone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
@@ -98,6 +100,7 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/songInfo"
+        android:visibility="gone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
