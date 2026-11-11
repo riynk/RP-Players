@@ -249,7 +249,7 @@ class TtmlLyricsView @JvmOverloads constructor(
 
         val background = if (active && backgroundSegments.isNotEmpty()) {
             val secondaryPaint = TextPaint(paint).apply {
-                textSize = backgroundTextSize * density
+                textSize = backgroundTextSize * resources.displayMetrics.scaledDensity
                 typeface = Typeface.DEFAULT_BOLD
                 color = backgroundColor
                 shader = null
