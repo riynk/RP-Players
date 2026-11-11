@@ -114,6 +114,9 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
             )
             val backgroundSizePx = PreferenceUtil.lyricsBackgroundTextSize.toFloat()
             lrcView.setTextSizes(mainSizePx, mainSizePx * 0.85f)
+            lrcView.setLyricsLineSpacing(
+                PreferenceUtil.lyricsLineSpacing * resources.displayMetrics.density
+            )
             binding.ttmlLyricsView.apply {
                 setTextSizes(mainSizePx, mainSizePx)
                 setBackgroundVocalTextSize(backgroundSizePx)
