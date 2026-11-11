@@ -147,12 +147,15 @@ object TtmlLyricsParser {
                     val dur = parser.getAttributeValue(null, "dur")
                         ?.let { parseTime(it, frameRate, tickRate, null) }
                     val start = begin ?: parentStart
-                    val finish = end ?: dur?.let { (start ?: 0L) + it } ?: parentEnd
+                    val explicitFinish = end ?: dur?.let { (start ?: 0L) + it }
+                    // A child with its own begin but no end is closed by the next
+                    // timed sibling, not by the paragraph's full end.
+                    val nestedEnd = explicitFinish ?: if (begin == null) parentEnd else null
                     val background = inheritedBackground ||
                         (parser.getAttributeValue(NS_TTM, "role") == "x-bg")
 
                     val nested = parseChildren(
-                        parser, tag, start, finish, background, frameRate, tickRate
+                        parser, tag, start, nestedEnd, background, frameRate, tickRate
                     )
                     result.text.append(nested.text)
                     if (tag == "span") {
