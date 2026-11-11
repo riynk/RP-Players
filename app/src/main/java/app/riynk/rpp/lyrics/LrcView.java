@@ -463,8 +463,10 @@ public class LrcView extends View {
                         ((mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) >> 1)
                                 + mDividerHeight;
             }
-            if (i <= mCurrentLine) {
-                mLrcPaint.setTextSize(mNormalTextSize);
+            if (i == mCurrentLine) {
+                // The active line uses the configured main size. StaticLayout
+                // is measured at this size when entries are rebuilt.
+                mLrcPaint.setTextSize(mCurrentTextSize);
                 mLrcPaint.setColor(mCurrentTextColor);
             } else {
                 mLrcPaint.setTextSize(mNormalTextSize);
