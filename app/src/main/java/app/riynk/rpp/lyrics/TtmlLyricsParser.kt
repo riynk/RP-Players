@@ -57,6 +57,7 @@ object TtmlLyricsParser {
             var timingMode = "Line"
             var frameRate = 30.0
             var tickRate = 1.0
+            var appleTiming = false
             val lines = mutableListOf<TtmlLine>()
 
             var event = parser.eventType
@@ -64,13 +65,15 @@ object TtmlLyricsParser {
                 if (event == XmlPullParser.START_TAG) {
                     when (parser.name) {
                         "tt" -> {
-                            timingMode = parser.getAttributeValue(NS_ITUNES, "timing") ?: "Line"
+                            val appleMode = parser.getAttributeValue(NS_ITUNES, "timing")
+                            timingMode = appleMode ?: "Line"
+                            appleTiming = appleMode != null
                             frameRate = parser.getAttributeValue(null, "frameRate")
                                 ?.toDoubleOrNull() ?: 30.0
                             tickRate = parser.getAttributeValue(null, "tickRate")
                                 ?.toDoubleOrNull() ?: frameRate
                         }
-                        "p" -> parseParagraph(parser, frameRate, tickRate)?.let(lines::add)
+                        "p" -> parseParagraph(parser, frameRate, tickRate, appleTiming)?.let(lines::add)
                     }
                 }
                 event = parser.next()
@@ -90,14 +93,15 @@ object TtmlLyricsParser {
     private fun parseParagraph(
         parser: XmlPullParser,
         frameRate: Double,
-        tickRate: Double
+        tickRate: Double,
+        appleTiming: Boolean
     ): TtmlLine? {
         val beginRaw = parser.getAttributeValue(null, "begin")
         val endRaw = parser.getAttributeValue(null, "end")
         val durRaw = parser.getAttributeValue(null, "dur")
-        val lineStart = beginRaw?.let { parseTime(it, frameRate, tickRate, null) } ?: 0L
-        val explicitEnd = endRaw?.let { parseTime(it, frameRate, tickRate, lineStart) }
-        val durationEnd = durRaw?.let { lineStart + (parseTime(it, frameRate, tickRate, null) ?: 0L) }
+        val lineStart = beginRaw?.let { parseTime(it, frameRate, tickRate, null, appleTiming) } ?: 0L
+        val explicitEnd = endRaw?.let { parseTime(it, frameRate, tickRate, lineStart, appleTiming) }
+        val durationEnd = durRaw?.let { lineStart + (parseTime(it, frameRate, tickRate, null, appleTiming) ?: 0L) }
         val lineEnd = explicitEnd ?: durationEnd
         val agent = parser.getAttributeValue(NS_TTM, "agent")
             ?: parser.getAttributeValue(null, "agent")
@@ -109,7 +113,7 @@ object TtmlLyricsParser {
 
         val parsed = parseChildren(
             parser, "p", if (beginRaw != null) lineStart else null,
-            lineEnd, false, frameRate, tickRate
+            lineEnd, false, frameRate, tickRate, appleTiming
         )
         val text = parsed.text.toString()
         if (text.isBlank()) return null
@@ -157,7 +161,8 @@ object TtmlLyricsParser {
         parentEnd: Long?,
         inheritedBackground: Boolean,
         frameRate: Double,
-        tickRate: Double
+        tickRate: Double,
+        appleTiming: Boolean
     ): ParsedContent {
         val result = ParsedContent()
         while (true) {
@@ -165,11 +170,11 @@ object TtmlLyricsParser {
                 XmlPullParser.START_TAG -> {
                     val tag = parser.name
                     val begin = parser.getAttributeValue(null, "begin")
-                        ?.let { parseTime(it, frameRate, tickRate, parentStart) }
+                        ?.let { parseTime(it, frameRate, tickRate, parentStart, appleTiming) }
                     val end = parser.getAttributeValue(null, "end")
                         ?.let { parseTime(it, frameRate, tickRate, parentStart) }
                     val dur = parser.getAttributeValue(null, "dur")
-                        ?.let { parseTime(it, frameRate, tickRate, null) }
+                        ?.let { parseTime(it, frameRate, tickRate, null, appleTiming) }
                     val start = begin ?: parentStart
                     val explicitFinish = end ?: dur?.let { (start ?: 0L) + it }
                     // A child with its own begin but no end is closed by the next
@@ -179,7 +184,7 @@ object TtmlLyricsParser {
                         (parser.getAttributeValue(NS_TTM, "role") == "x-bg")
 
                     val nested = parseChildren(
-                        parser, tag, start, nestedEnd, background, frameRate, tickRate
+                        parser, tag, start, nestedEnd, background, frameRate, tickRate, appleTiming
                     )
                     result.text.append(nested.text)
                     if (tag == "span") {
@@ -219,7 +224,8 @@ object TtmlLyricsParser {
         raw: String,
         frameRate: Double,
         tickRate: Double,
-        parentStart: Long?
+        parentStart: Long?,
+        offsetsAreAbsolute: Boolean
     ): Long? {
         val value = raw.trim()
         if (value.isEmpty()) return null
@@ -249,6 +255,6 @@ object TtmlLyricsParser {
             "t" -> amount / tickRate * 1000.0
             else -> return null
         }.roundToLong()
-        return if (parentStart != null) parentStart + millis else millis
+        return if (!offsetsAreAbsolute && parentStart != null) parentStart + millis else millis
     }
 }
