@@ -178,7 +178,7 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
     }
 
     private fun isLyricsLayoutVisible(): Boolean {
-        return lyrics != null && lyrics!!.isSynchronized && lyrics!!.isValid
+        return ttmlLyrics?.isValid == true || (lyrics != null && lyrics!!.isSynchronized && lyrics!!.isValid)
     }
 
     private fun hideLyricsLayout() {
