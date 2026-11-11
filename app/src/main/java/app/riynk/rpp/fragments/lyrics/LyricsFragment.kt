@@ -463,7 +463,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         sharedPreferences: SharedPreferences,
         key: String?
     ) {
-        if (key in setOf(
+        if (key != null && key in setOf(
                 "rp_lyrics_main_text_size",
                 "rp_lyrics_background_text_size",
                 "rp_lyrics_line_spacing"
