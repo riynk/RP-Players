@@ -5,13 +5,46 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.viewpager.widget.ViewPager
-        android:id="@+id/viewPager"
+    <LinearLayout
+        android:id="@+id/cover_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:overScrollMode="@integer/overScrollMode">
+        android:orientation="vertical">
 
-    </androidx.viewpager.widget.ViewPager>
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:overScrollMode="@integer/overScrollMode" />
+
+        <com.bosphere.fadingedgelayout.FadingEdgeLayout
+            android:id="@+id/belowLyricsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.48"
+            android:visibility="gone"
+            app:fel_edge="top|bottom"
+            app:fel_size_bottom="20dp"
+            app:fel_size_top="20dp">
+
+            <app.riynk.rpp.lyrics.CoverLrcView
+                android:id="@+id/belowLyricsView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:visibility="gone"
+                app:lrcLabel="@string/no_lyrics_found"
+                app:lrcNormalTextSize="16sp"
+                app:lrcPadding="12dp"
+                app:lrcTextGravity="center"
+                app:lrcTextSize="20sp"
+                app:lrcTimelineColor="@color/transparent" />
+        </com.bosphere.fadingedgelayout.FadingEdgeLayout>
+    </LinearLayout>
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/cover_lyrics"
@@ -24,6 +57,7 @@
         android:id="@+id/fading_edge_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:visibility="gone"
         app:fel_edge="top|bottom"
         app:fel_size_bottom="100dp"
         app:fel_size_top="100dp">
