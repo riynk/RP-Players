@@ -43,7 +43,8 @@ import app.riynk.rpp.fragments.base.AbsMainActivityFragment
 import app.riynk.rpp.helper.MusicPlayerRemote
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.lyrics.LrcView
-import app.riynk.rpp.lyrics.TtmlLyricsParser
+import app.riynk.rpp.lyrics.LyricsDocument
+import app.riynk.rpp.lyrics.LyricsRepository
 import app.riynk.rpp.model.AudioTagInfo
 import app.riynk.rpp.model.Song
 import app.riynk.rpp.util.FileUtils
@@ -385,61 +386,49 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         binding.normalLyrics.text = lyrics
     }
 
-    /**
-     * @return success
-     */
-    private fun loadLRCLyrics(): Boolean {
-        val lrcFile = LyricUtil.getSyncedLyricsFile(song)
-        if (lrcFile != null) {
-            binding.lyricsView.loadLrc(lrcFile)
-        } else {
-            val embeddedLyrics = LyricUtil.getEmbeddedSyncedLyrics(song.data)
-            if (embeddedLyrics != null) {
-                binding.lyricsView.loadLrc(embeddedLyrics)
-            } else {
-                binding.lyricsView.setLabel(getString(R.string.empty))
-                return false
-            }
-        }
-        return true
-    }
-
     private fun loadLyrics() {
         val currentSong = song
         viewLifecycleOwner.lifecycleScope.launch {
-            val ttml = withContext(Dispatchers.IO) {
-                val sidecar = LyricUtil.getSyncedLyricsTtmlFile(currentSong)
-                    ?.let { runCatching { it.readText() }.getOrNull() }
-                val parsedSidecar = sidecar?.let { TtmlLyricsParser.parse(it) }
-                parsedSidecar ?: LyricUtil.getEmbeddedTtmlLyrics(currentSong.data)
-                    ?.let { TtmlLyricsParser.parse(it) }
+            val document = withContext(Dispatchers.IO) {
+                LyricsRepository.load(currentSong)
             }
 
-            if (_binding == null || MusicPlayerRemote.currentSong.id != currentSong.id) return@launch
-            if (ttml?.isValid == true) {
-                binding.ttmlLyricsView.setLyrics(ttml)
-                binding.ttmlLyricsView.isVisible = true
-                binding.ttmlLyricsView.post {
-                    binding.ttmlLyricsView.updateTime(MusicPlayerRemote.songProgressMillis.toLong())
-                }
-                binding.lyricsView.isVisible = false
-                binding.normalLyrics.isVisible = false
-                binding.noLyricsFound.isVisible = false
-                lyricsType = LyricsType.SYNCED_LYRICS
+            if (_binding == null || MusicPlayerRemote.currentSong.id != currentSong.id) {
                 return@launch
             }
 
-            binding.ttmlLyricsView.setLyrics(null)
-            binding.ttmlLyricsView.isVisible = false
-            lyricsType = if (!loadLRCLyrics()) {
-                binding.lyricsView.isVisible = false
-                loadNormalLyrics()
-                LyricsType.NORMAL_LYRICS
-            } else {
-                binding.normalLyrics.isVisible = false
-                binding.noLyricsFound.isVisible = false
-                binding.lyricsView.isVisible = true
-                LyricsType.SYNCED_LYRICS
+            when (document) {
+                is LyricsDocument.Ttml -> {
+                    binding.ttmlLyricsView.setLyrics(document.value)
+                    binding.ttmlLyricsView.isVisible = true
+                    binding.ttmlLyricsView.post {
+                        if (_binding != null && MusicPlayerRemote.currentSong.id == currentSong.id) {
+                            binding.ttmlLyricsView.updateTime(
+                                MusicPlayerRemote.songProgressMillis.toLong()
+                            )
+                        }
+                    }
+                    binding.lyricsView.isVisible = false
+                    binding.normalLyrics.isVisible = false
+                    binding.noLyricsFound.isVisible = false
+                    lyricsType = LyricsType.SYNCED_LYRICS
+                }
+                is LyricsDocument.Lrc -> {
+                    binding.ttmlLyricsView.setLyrics(null)
+                    binding.ttmlLyricsView.isVisible = false
+                    binding.lyricsView.loadLrc(document.content)
+                    binding.normalLyrics.isVisible = false
+                    binding.noLyricsFound.isVisible = false
+                    binding.lyricsView.isVisible = true
+                    lyricsType = LyricsType.SYNCED_LYRICS
+                }
+                LyricsDocument.None -> {
+                    binding.ttmlLyricsView.setLyrics(null)
+                    binding.ttmlLyricsView.isVisible = false
+                    binding.lyricsView.isVisible = false
+                    loadNormalLyrics()
+                    lyricsType = LyricsType.NORMAL_LYRICS
+                }
             }
         }
     }
