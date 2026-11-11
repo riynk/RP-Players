@@ -124,7 +124,7 @@ open class PlayerPlaybackControlsFragment(
             recommendedMetadata.findViewById<TextView>(R.id.rpSongTitle)?.text = song.title
             recommendedMetadata.findViewById<TextView>(R.id.rpSongArtist)?.text = song.artistName
             recommendedMetadata.findViewById<TextView>(R.id.rpSongAlbum)?.apply {
-                text = song.albumName.takeIf { it.isNotBlank() } ?: song.albumArtist.orEmpty()
+                text = song.albumName.takeIf { it.isNotBlank() }.orEmpty()
                 visibility = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
             }
             binding.title.hide()
