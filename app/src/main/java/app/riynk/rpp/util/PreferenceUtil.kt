@@ -840,6 +840,24 @@ object PreferenceUtil {
             putFloat("rp_lyrics_playback_rate", value.coerceIn(0.5f, 2.0f))
         }
 
+    var lyricsMainTextSize: Int
+        get() = sharedPreferences.getInt("rp_lyrics_main_text_size", 30)
+        set(value) = sharedPreferences.edit {
+            putInt("rp_lyrics_main_text_size", value.coerceIn(16, 48))
+        }
+
+    var lyricsBackgroundTextSize: Int
+        get() = sharedPreferences.getInt("rp_lyrics_background_text_size", 24)
+        set(value) = sharedPreferences.edit {
+            putInt("rp_lyrics_background_text_size", value.coerceIn(12, 40))
+        }
+
+    var lyricsLineSpacing: Int
+        get() = sharedPreferences.getInt("rp_lyrics_line_spacing", 12)
+        set(value) = sharedPreferences.edit {
+            putInt("rp_lyrics_line_spacing", value.coerceIn(0, 32))
+        }
+
     var playbackPitch
         get() = sharedPreferences
             .getFloat(PLAYBACK_PITCH, 1F)
