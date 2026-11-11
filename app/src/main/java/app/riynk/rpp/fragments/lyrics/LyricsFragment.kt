@@ -122,16 +122,22 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
     }
 
     private fun setupLyricsView() {
-        if (PreferenceUtil.isRpLyrics) {
-            binding.normalLyrics.textSize = 26f
-        }
+        val currentTextSize = if (PreferenceUtil.isRpLyrics) 38f else 28f
+        val normalTextSize = if (PreferenceUtil.isRpLyrics) 30f else 24f
+        binding.normalLyrics.textSize = if (PreferenceUtil.isRpLyrics) 26f else 18f
+        binding.lyricsView.setTextSizes(
+            TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_SP,
+                currentTextSize,
+                resources.displayMetrics
+            ),
+            TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_SP,
+                normalTextSize,
+                resources.displayMetrics
+            )
+        )
         binding.lyricsView.apply {
-            if (PreferenceUtil.isRpLyrics) {
-                setTextSizes(
-                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 38f, resources.displayMetrics),
-                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 30f, resources.displayMetrics)
-                )
-            }
             setCurrentColor(accentColor())
             setTimeTextColor(accentColor())
             setTimelineColor(accentColor())
@@ -175,18 +181,18 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
 
     private fun updateTitleSong() {
         song = MusicPlayerRemote.currentSong
-        if (_binding != null && PreferenceUtil.isRpLyrics) {
-            binding.toolbar.title = song.title
-            binding.toolbar.subtitle = song.artistName
+        if (_binding != null) {
+            binding.toolbar.title =
+                if (PreferenceUtil.isRpLyrics) song.title else getString(R.string.lyrics)
+            binding.toolbar.subtitle = if (PreferenceUtil.isRpLyrics) song.artistName else null
         }
     }
 
     private fun setupToolbar() {
         mainActivity.setSupportActionBar(binding.toolbar)
-        if (PreferenceUtil.isRpLyrics) {
-            binding.toolbar.title = song.title
-            binding.toolbar.subtitle = song.artistName
-        }
+        binding.toolbar.title =
+            if (PreferenceUtil.isRpLyrics) song.title else getString(R.string.lyrics)
+        binding.toolbar.subtitle = if (PreferenceUtil.isRpLyrics) song.artistName else null
         ToolbarContentTintHelper.colorBackButton(binding.toolbar)
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
