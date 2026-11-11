@@ -834,6 +834,12 @@ object PreferenceUtil {
             .getFloat(PLAYBACK_SPEED, 1F)
         set(value) = sharedPreferences.edit { putFloat(PLAYBACK_SPEED, value) }
 
+    var lyricsPlaybackRate: Float
+        get() = sharedPreferences.getFloat("rp_lyrics_playback_rate", 1.0f)
+        set(value) = sharedPreferences.edit {
+            putFloat("rp_lyrics_playback_rate", value.coerceIn(0.5f, 2.0f))
+        }
+
     var playbackPitch
         get() = sharedPreferences
             .getFloat(PLAYBACK_PITCH, 1F)
