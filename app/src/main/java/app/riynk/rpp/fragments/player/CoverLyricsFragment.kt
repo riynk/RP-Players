@@ -48,6 +48,7 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
         if (PreferenceUtil.showLyrics) {
             progressViewUpdateHelper?.start()
         }
+        binding.root.isVisible = PreferenceUtil.showLyrics
         // Remove background on Fit theme
         val nps = PreferenceUtil.nowPlayingScreen
         if (nps == NowPlayingScreen.Fit || nps == NowPlayingScreen.Full) {

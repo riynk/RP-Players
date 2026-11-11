@@ -19,6 +19,7 @@ import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
@@ -222,6 +223,33 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
         binding.coverLyrics.isVisible = false
         binding.lyricsView.isVisible = false
         binding.viewPager.isVisible = true
+
+        if (PreferenceUtil.lyricsType == CoverLyricsType.BELOW_ARTWORK) {
+            val belowArtworkHeight = (112 * resources.displayMetrics.density).toInt()
+            binding.root.clipChildren = false
+            binding.root.clipToPadding = false
+            var parent = binding.root.parent
+            while (parent is ViewGroup) {
+                parent.clipChildren = false
+                parent.clipToPadding = false
+                parent = parent.parent
+            }
+            binding.coverLyrics.layoutParams = binding.coverLyrics.layoutParams.apply {
+                height = if (visible) belowArtworkHeight else ViewGroup.LayoutParams.MATCH_PARENT
+            }
+            binding.coverLyrics.translationY =
+                if (visible) binding.root.height.toFloat() else 0f
+            binding.coverLyrics.isVisible = visible
+            if (visible) {
+                (binding.root.parent as? View)?.bringToFront()
+            }
+            return
+        }
+
+        binding.coverLyrics.translationY = 0f
+        binding.coverLyrics.layoutParams = binding.coverLyrics.layoutParams.apply {
+            height = ViewGroup.LayoutParams.MATCH_PARENT
+        }
         val lyrics: View = if (PreferenceUtil.lyricsType == CoverLyricsType.REPLACE_COVER) {
             ObjectAnimator.ofFloat(viewPager, View.ALPHA, if (visible) 0F else 1F).start()
             lrcView
