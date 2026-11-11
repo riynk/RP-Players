@@ -232,7 +232,12 @@ class TtmlLyricsView @JvmOverloads constructor(
         return StaticLayout.Builder.obtain(builder, 0, builder.length, textPaint, contentWidth)
             .setAlignment(alignment)
             .setIncludePad(false)
-            .setLineSpacing(if (textPaint.textSize <= backgroundTextSize * density + 1f) 8f * density else 10f * density, 1f)
+            .setBreakStrategy(Layout.BREAK_STRATEGY_HIGH_QUALITY)
+            .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NORMAL)
+            .setLineSpacing(
+                if (textPaint.textSize <= backgroundTextSize * resources.displayMetrics.scaledDensity + 1f) 8f * density else 10f * density,
+                1f
+            )
             .build()
     }
 
@@ -337,22 +342,15 @@ class TtmlLyricsView @JvmOverloads constructor(
             } else {
                 paddingLeft
             }
-            val pivotX = if (line.alignment == TtmlAlignment.RIGHT) layoutWidth.toFloat() else 0f
-
             canvas.save()
-            val scaleInset = if (active) 8f * density else 0f
+            // Do not enlarge the active line beyond its measured StaticLayout width.
+            // Scaling long lines caused the last words to be clipped at screen edges.
             canvas.saveLayerAlpha(
-                left - scaleInset, y - scaleInset,
-                left + layoutWidth + scaleInset, y + rendered.height + scaleInset,
+                left.toFloat(), y,
+                (left + layoutWidth).toFloat(), y + rendered.height,
                 (alpha * 255).roundToInt()
             )
-            if (active) {
-                canvas.translate(left + pivotX, y + rendered.height / 2f)
-                canvas.scale(1.05f, 1.05f)
-                canvas.translate(-pivotX, -rendered.height / 2f)
-            } else {
-                canvas.translate(left.toFloat(), y)
-            }
+            canvas.translate(left.toFloat(), y)
             rendered.main.draw(canvas)
             rendered.background?.let {
                 canvas.translate(0f, rendered.main.height + 2f * density)
