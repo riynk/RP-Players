@@ -114,7 +114,7 @@ object TtmlLyricsParser {
         val text = parsed.text.toString()
         if (text.isBlank()) return null
 
-        val segments = parsed.segments.filter { it.text.isNotEmpty() }
+        val segments = markParentheticalBackground(parsed.segments.filter { it.text.isNotEmpty() })
         val inferredStart = segments.mapNotNull { it.startMs }.minOrNull()
         val inferredEnd = segments.mapNotNull { it.endMs }.maxOrNull()
         return TtmlLine(
@@ -129,6 +129,24 @@ object TtmlLyricsParser {
             hasTiming = beginRaw != null || endRaw != null || durRaw != null ||
                 segments.any { it.startMs != null || it.endMs != null }
         )
+    }
+
+    /**
+     * Some TTML sources identify backing vocals with parentheses instead of x-bg.
+     * Preserve the original characters, but render the enclosed passage as secondary text.
+     */
+    private fun markParentheticalBackground(segments: List<TtmlSegment>): List<TtmlSegment> {
+        var insideParentheses = false
+        return segments.map { segment ->
+            if (segment.text.contains("(")) insideParentheses = true
+            val updated = if (insideParentheses || segment.isBackground) {
+                segment.copy(isBackground = true)
+            } else {
+                segment
+            }
+            if (segment.text.contains(")")) insideParentheses = false
+            updated
+        }
     }
 
     /** Called while the parser is positioned on the opening tag. */
