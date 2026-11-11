@@ -16,6 +16,7 @@ package app.riynk.rpp.activities
 
 import android.content.Intent
 import android.graphics.drawable.Animatable
+import android.widget.ImageView
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -49,7 +50,7 @@ class MainActivity : AbsCastActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         splashScreen.setOnExitAnimationListener { splashProvider ->
-            val animatedIcon = splashProvider.iconView.drawable as? Animatable
+            val animatedIcon = (splashProvider.iconView as? ImageView)?.drawable as? Animatable
             if (animatedIcon != null) {
                 // Android can hand the exit callback an animated vector that has
                 // already reached its final frame. Restart it for every cold launch.
