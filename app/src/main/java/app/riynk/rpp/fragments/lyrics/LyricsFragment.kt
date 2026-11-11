@@ -387,7 +387,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
             if (_binding == null) return@launch
             if (ttml?.isValid == true) {
                 binding.ttmlLyricsView.setLyrics(ttml)
-                binding.ttmlLyricsView.updateTime(MusicPlayerRemote.position.toLong())
+                binding.ttmlLyricsView.updateTime(MusicPlayerRemote.songProgressMillis.toLong())
                 binding.ttmlLyricsView.isVisible = true
                 binding.lyricsView.isVisible = false
                 binding.normalLyrics.isVisible = false
