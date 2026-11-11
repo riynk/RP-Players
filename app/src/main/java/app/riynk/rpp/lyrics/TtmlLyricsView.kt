@@ -128,7 +128,11 @@ class TtmlLyricsView @JvmOverloads constructor(
     private fun findLine(time: Long, items: List<TtmlLine>): Int {
         var low = 0
         var high = items.lastIndex
-        var result = 0
+        // No lyric is active before the first source timestamp. Returning 0 here
+        // made the first line highlight early whenever a song had an intro.
+        if (items.isEmpty() || time < items.first().startMs) return -1
+
+        var result = -1
         while (low <= high) {
             val mid = (low + high) ushr 1
             if (items[mid].startMs <= time) {
