@@ -107,19 +107,24 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
                 return@launch
             }
 
+            val mainSizePx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_SP,
+                PreferenceUtil.lyricsMainTextSize.toFloat(),
+                resources.displayMetrics
+            )
+            val backgroundSizePx = PreferenceUtil.lyricsBackgroundTextSize.toFloat()
+            lrcView.setTextSizes(mainSizePx, mainSizePx * 0.85f)
+            binding.ttmlLyricsView.apply {
+                setTextSizes(mainSizePx, mainSizePx)
+                setBackgroundVocalTextSize(backgroundSizePx)
+                setLyricsLineSpacing(PreferenceUtil.lyricsLineSpacing.toFloat())
+            }
+
             when (document) {
                 is LyricsDocument.Ttml -> {
                     usingTtmlLyrics = true
                     lrcView.reset()
                     binding.ttmlLyricsView.apply {
-                        setTextSizes(
-                            TypedValue.applyDimension(
-                                TypedValue.COMPLEX_UNIT_SP, 30f, resources.displayMetrics
-                            ),
-                            TypedValue.applyDimension(
-                                TypedValue.COMPLEX_UNIT_SP, 30f, resources.displayMetrics
-                            )
-                        )
                         setCurrentColor(android.graphics.Color.WHITE)
                         setNormalColor(0x99FFFFFF.toInt())
                         setBackgroundVocalColor(0xCCFFFFFF.toInt())
