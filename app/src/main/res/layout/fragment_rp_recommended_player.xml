@@ -118,16 +118,14 @@
         app:layout_constraintTop_toBottomOf="@id/rpRecommendedMetadata" />
 
 
-    <androidx.fragment.app.FragmentContainerView
+    <View
         android:id="@+id/rpLyricsSpacer"
-        android:name="app.riynk.rpp.fragments.player.BelowArtworkLyricsFragment"
         android:layout_width="0dp"
         android:layout_height="112dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/playerAlbumCoverFragment"
-        tools:layout="@layout/fragment_cover_lyrics" />
+        app:layout_constraintTop_toBottomOf="@id/playerAlbumCoverFragment" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/playbackControlsFragment"
