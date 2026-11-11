@@ -8,7 +8,9 @@
         android:layout="@layout/list_item_view_switch"
         android:summary="@string/pref_summary_ignore_media_store_artwork"
         android:title="@string/pref_title_ignore_media_store_artwork"
-        app:icon="@drawable/ic_image" />
+       
+            app:icon="@drawable/ic_image"
+        />
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
         android:defaultValue="@string/download_policy"
@@ -16,5 +18,7 @@
         android:entryValues="@array/pref_auto_download_images_values"
         android:key="auto_download_images_policy"
         android:layout="@layout/list_item_view"
-        android:title="@string/pref_title_auto_download_artist_images" app:icon="@drawable/ic_image" />
+        android:title="@string/pref_title_auto_download_artist_images"
+            app:icon="@drawable/ic_image"
+        />
 </androidx.preference.PreferenceScreen>
