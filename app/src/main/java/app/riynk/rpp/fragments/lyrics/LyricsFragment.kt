@@ -114,7 +114,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         enterTransition = Fade()
         exitTransition = Fade()
         _binding = FragmentLyricsBinding.bind(view)
-        updateHelper = MusicProgressViewUpdateHelper(this, 500, 1000)
+        updateHelper = MusicProgressViewUpdateHelper(this, 80, 500)
         updateTitleSong()
         setupLyricsView()
         loadLyrics()
@@ -146,6 +146,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         )
         binding.ttmlLyricsView.setCurrentColor(accentColor())
         binding.ttmlLyricsView.setNormalColor(0x99FFFFFF.toInt())
+        binding.ttmlLyricsView.setPlaybackRate(PreferenceUtil.lyricsPlaybackRate)
         binding.ttmlLyricsView.setOnSeekListener {
             MusicPlayerRemote.seekTo(it.toInt())
         }
@@ -227,8 +228,30 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
     }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_search) {
-            openUrl(googleSearchLrcUrl)
+        when (item.itemId) {
+            R.id.action_search -> {
+                openUrl(googleSearchLrcUrl)
+                return true
+            }
+            R.id.action_lyrics_speed -> {
+                materialDialog().show {
+                    title(text = "Kecepatan lirik")
+                    input(
+                        hint = "1.0",
+                        prefill = PreferenceUtil.lyricsPlaybackRate.toString(),
+                        inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+                    ) { _, input ->
+                        val rate = input.toString().toFloatOrNull()
+                        if (rate != null && rate in 0.5f..2.0f) {
+                            PreferenceUtil.lyricsPlaybackRate = rate
+                            binding.ttmlLyricsView.setPlaybackRate(rate)
+                        }
+                    }
+                    positiveButton(res = R.string.save)
+                    negativeButton(res = android.R.string.cancel)
+                }
+                return true
+            }
         }
         return false
     }
