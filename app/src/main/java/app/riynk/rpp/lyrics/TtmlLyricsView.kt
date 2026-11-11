@@ -175,7 +175,10 @@ class TtmlLyricsView @JvmOverloads constructor(
         } else {
             Layout.Alignment.ALIGN_NORMAL
         }
-        return StaticLayout.Builder.obtain(builder, 0, builder.length, paint, max(1, width - paddingLeft - paddingRight))
+        val contentWidth = max(1, width - paddingLeft - paddingRight)
+        val hasMultipleVoices = lyrics?.lines?.mapNotNull { it.agent }?.distinct()?.size ?: 0 > 1
+        val layoutWidth = (contentWidth * if (hasMultipleVoices) 0.7f else 1f).toInt().coerceAtLeast(1)
+        return StaticLayout.Builder.obtain(builder, 0, builder.length, paint, layoutWidth)
             .setAlignment(alignment)
             .setIncludePad(false)
             .setLineSpacing(0f, 1.12f)
@@ -220,8 +223,14 @@ class TtmlLyricsView @JvmOverloads constructor(
             val layout = buildLayout(line, index)
             val y = paddingTop + tops[index] - scrollOffset
             if (y + layout.height < 0 || y > height) return@forEachIndexed
+            val contentWidth = max(1, width - paddingLeft - paddingRight)
+            val horizontalOffset = if (line.alignment == TtmlAlignment.RIGHT) {
+                contentWidth - layout.width
+            } else {
+                0
+            }
             canvas.save()
-            canvas.translate(paddingLeft.toFloat(), y)
+            canvas.translate((paddingLeft + horizontalOffset).toFloat(), y)
             layout.draw(canvas)
             canvas.restore()
         }
