@@ -126,9 +126,9 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
     }
 
     private fun setupLyricsView() {
-        val currentTextSize = if (PreferenceUtil.isRpLyrics) 38f else 28f
-        val normalTextSize = if (PreferenceUtil.isRpLyrics) 30f else 24f
-        binding.normalLyrics.textSize = if (PreferenceUtil.isRpLyrics) 26f else 18f
+        val currentTextSize = PreferenceUtil.lyricsMainTextSize.toFloat()
+        val normalTextSize = (currentTextSize - 4f).coerceAtLeast(12f)
+        binding.normalLyrics.textSize = (currentTextSize - 4f).coerceAtLeast(12f)
         binding.lyricsView.setTextSizes(
             TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_SP,
@@ -141,12 +141,18 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
                 resources.displayMetrics
             )
         )
-        // Local Player uses 30sp bold for the primary lyric at rest and while active.
-        // Keep the legacy LRC sizing above unchanged; these values apply only to TTML.
         val ttmlMainSize = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_SP, 30f, resources.displayMetrics
+            TypedValue.COMPLEX_UNIT_SP,
+            PreferenceUtil.lyricsMainTextSize.toFloat(),
+            resources.displayMetrics
         )
         binding.ttmlLyricsView.setTextSizes(ttmlMainSize, ttmlMainSize)
+        binding.ttmlLyricsView.setBackgroundVocalTextSize(
+            PreferenceUtil.lyricsBackgroundTextSize.toFloat()
+        )
+        binding.ttmlLyricsView.setLyricsLineSpacing(
+            PreferenceUtil.lyricsLineSpacing.toFloat()
+        )
         binding.ttmlLyricsView.setCurrentColor(accentColor())
         binding.ttmlLyricsView.setNormalColor(0x66FFFFFF.toInt())
         binding.ttmlLyricsView.setBackgroundVocalColor(0x66FFFFFF.toInt())
