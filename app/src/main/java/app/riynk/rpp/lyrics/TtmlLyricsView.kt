@@ -141,13 +141,10 @@ class TtmlLyricsView @JvmOverloads constructor(
         return result
     }
 
-    // Lines with the same start time (e.g. duet voices) remain active together.
+    // Match Local Player's active-index rule while keeping simultaneous duet rows active.
     private fun isLineActive(index: Int, line: TtmlLine): Boolean {
-        val items = lyrics?.lines ?: return index == currentLine
-        val nextStart = items.drop(index + 1).firstOrNull { it.startMs > line.startMs }?.startMs
-        val effectiveEnd = line.endMs ?: nextStart
-        return currentTime >= line.startMs &&
-            (effectiveEnd == null || currentTime < effectiveEnd)
+        val activeStart = lyrics?.lines?.getOrNull(currentLine)?.startMs ?: return false
+        return index == currentLine || line.startMs == activeStart
     }
 
     private fun hasWordTiming(line: TtmlLine): Boolean =
@@ -267,8 +264,9 @@ class TtmlLyricsView @JvmOverloads constructor(
         val items = lyrics?.lines ?: return
         if (currentLine !in items.indices || height == 0) return
         val tops = lineTopPositions(items)
+        // Local Player keeps the active lyric around the upper third of the viewport.
         val desired = tops[currentLine] + buildLayout(items[currentLine], currentLine).height / 2f -
-            (height - paddingTop - paddingBottom) / 2f
+            (height - paddingTop - paddingBottom) / 3f
         targetOffset = desired.coerceAtLeast(0f)
         animator?.cancel()
         animator = ValueAnimator.ofFloat(scrollOffset, targetOffset).apply {
