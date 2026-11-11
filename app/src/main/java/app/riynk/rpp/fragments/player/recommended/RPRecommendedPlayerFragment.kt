@@ -23,11 +23,10 @@ import app.riynk.rpp.util.CoverLyricsType
 import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.PreferenceUtil.blurAmount
 import com.bumptech.glide.Glide
-import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 
 class RPRecommendedPlayerFragment : PlayerFragment(R.layout.fragment_rp_recommended_player) {
     private var backgroundImage: ImageView? = null
-    private var lastRequest: RequestBuilder<Drawable>? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -48,6 +47,9 @@ class RPRecommendedPlayerFragment : PlayerFragment(R.layout.fragment_rp_recommen
     private fun updateBlur() {
         val target = backgroundImage ?: return
         if (!isAdded) return
+        val previous = target.drawable?.constantState
+            ?.newDrawable(resources)?.mutate()
+            ?: ColorDrawable(Color.DKGRAY)
         Glide.with(this)
             .load(RetroGlideExtension.getSongModel(MusicPlayerRemote.currentSong))
             .simpleSongCoverOptions(MusicPlayerRemote.currentSong)
@@ -56,12 +58,10 @@ class RPRecommendedPlayerFragment : PlayerFragment(R.layout.fragment_rp_recommen
                     .blurRadius(blurAmount.toFloat())
                     .build()
             )
-            .thumbnail(lastRequest)
-            .error(Glide.with(this).load(ColorDrawable(Color.DKGRAY)).fitCenter())
-            .also {
-                lastRequest = it.clone()
-                it.crossfadeListener().into(target)
-            }
+            .placeholder(previous)
+            .error(ColorDrawable(Color.DKGRAY))
+            .transition(DrawableTransitionOptions.withCrossFade(450))
+            .into(target)
     }
 
     override fun onServiceConnected() {
@@ -78,11 +78,6 @@ class RPRecommendedPlayerFragment : PlayerFragment(R.layout.fragment_rp_recommen
         super.onSharedPreferenceChanged(sharedPreferences, key)
         if (key == NEW_BLUR_AMOUNT) updateBlur()
         if (key == SHOW_LYRICS || key == LYRICS_TYPE) updateLyricsSpacer()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        lastRequest = null
     }
 
     override fun onDestroyView() {
