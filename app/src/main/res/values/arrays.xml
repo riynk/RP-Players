@@ -25,7 +25,6 @@
     <string-array name="pref_lyrics_type_values">
         <item>0</item>
         <item>1</item>
-        <item>2</item>
     </string-array>
 
     <array name="pref_full_lyrics_type_entries">

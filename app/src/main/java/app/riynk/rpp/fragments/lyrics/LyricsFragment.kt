@@ -122,6 +122,9 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
     }
 
     private fun setupLyricsView() {
+        if (PreferenceUtil.isRpLyrics) {
+            binding.normalLyrics.textSize = 26f
+        }
         binding.lyricsView.apply {
             if (PreferenceUtil.isRpLyrics) {
                 setTextSizes(
