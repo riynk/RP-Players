@@ -59,7 +59,7 @@ class TtmlLyricsView @JvmOverloads constructor(
     init {
         setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         paint.textSize = currentTextSize
-        paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        paint.typeface = Typeface.DEFAULT_BOLD
     }
 
     fun setLyrics(value: TtmlLyrics?) {
