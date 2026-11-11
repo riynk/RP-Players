@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import app.riynk.rpp.R
 import app.riynk.rpp.SHOW_LYRICS
-import app.riynk.rpp.LYRICS_TYPE
 import app.riynk.rpp.databinding.FragmentCoverLyricsBinding
 import app.riynk.rpp.extensions.dipToPix
 import app.riynk.rpp.fragments.NowPlayingScreen
@@ -24,7 +23,6 @@ import app.riynk.rpp.lyrics.LyricsRepository
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.model.lyrics.AbsSynchronizedLyrics
 import app.riynk.rpp.model.lyrics.Lyrics
-import app.riynk.rpp.util.CoverLyricsType
 import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.color.MediaNotificationProcessor
 import kotlinx.coroutines.Dispatchers
@@ -32,10 +30,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 
-open class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyrics),
+class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyrics),
     MusicProgressViewUpdateHelper.Callback, SharedPreferences.OnSharedPreferenceChangeListener {
-    protected open val isBelowArtworkPreview: Boolean = false
-
     private var progressViewUpdateHelper: MusicProgressViewUpdateHelper? = null
     private var _binding: FragmentCoverLyricsBinding? = null
     private val binding get() = _binding!!
@@ -52,10 +48,10 @@ open class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentCoverLyricsBinding.bind(view)
         progressViewUpdateHelper = MusicProgressViewUpdateHelper(this, 500, 1000)
-        binding.root.isVisible = shouldDisplayLyrics()
-        if (shouldDisplayLyrics()) {
+        if (PreferenceUtil.showLyrics) {
             progressViewUpdateHelper?.start()
         }
+        binding.root.isVisible = PreferenceUtil.showLyrics
         // Remove background on Fit theme
         val nps = PreferenceUtil.nowPlayingScreen
         if (nps == NowPlayingScreen.Fit || nps == NowPlayingScreen.Full) {
@@ -78,26 +74,15 @@ open class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
-        if (key == SHOW_LYRICS || key == LYRICS_TYPE) {
-            val visible = shouldDisplayLyrics()
-            binding.root.isVisible = visible
-            if (visible) {
+        if (key == SHOW_LYRICS) {
+            if (sharedPreferences.getBoolean(key, false)) {
                 progressViewUpdateHelper?.start()
+                binding.root.isVisible = true
                 updateLyrics()
             } else {
                 progressViewUpdateHelper?.stop()
-                hideLyricsLayout()
+                binding.root.isVisible = false
             }
-        }
-    }
-
-    private fun shouldDisplayLyrics(): Boolean {
-        if (!PreferenceUtil.showLyrics) return false
-        val isRecommended = PreferenceUtil.nowPlayingScreen == NowPlayingScreen.RPRecommended
-        return if (isBelowArtworkPreview) {
-            isRecommended && PreferenceUtil.lyricsType == CoverLyricsType.BELOW_ARTWORK
-        } else {
-            !isRecommended
         }
     }
 
@@ -193,7 +178,7 @@ open class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover
     }
 
     private fun isLyricsLayoutVisible(): Boolean {
-        return shouldDisplayLyrics() && (ttmlLyrics?.isValid == true || (lyrics != null && lyrics!!.isSynchronized && lyrics!!.isValid))
+        return ttmlLyrics?.isValid == true || (lyrics != null && lyrics!!.isSynchronized && lyrics!!.isValid)
     }
 
     private fun hideLyricsLayout() {
