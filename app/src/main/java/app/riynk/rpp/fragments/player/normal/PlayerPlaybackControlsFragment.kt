@@ -15,6 +15,7 @@
 package app.riynk.rpp.fragments.player.normal
 
 import android.os.Bundle
+import androidx.annotation.LayoutRes
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageButton
@@ -34,8 +35,9 @@ import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.color.MediaNotificationProcessor
 import com.google.android.material.slider.Slider
 
-class PlayerPlaybackControlsFragment :
-    AbsPlayerControlsFragment(R.layout.fragment_player_playback_controls) {
+open class PlayerPlaybackControlsFragment(
+    @LayoutRes layout: Int = R.layout.fragment_player_playback_controls
+) : AbsPlayerControlsFragment(layout) {
 
     private var _binding: FragmentPlayerPlaybackControlsBinding? = null
     private val binding get() = _binding!!

@@ -395,6 +395,7 @@
     <string name="replace_cover">Replace Cover</string>
     <string name="below_artwork">Below Artwork</string>
     <string name="rp_lyrics">RP Lyrics</string>
+    <string name="rp_recommended">RP Recommended</string>
     <string name="pref_title_full_lyrics_type">Full lyrics appearance</string>
     <string name="report_an_issue">Report an issue</string>
     <string name="report_bug">Report bug</string>

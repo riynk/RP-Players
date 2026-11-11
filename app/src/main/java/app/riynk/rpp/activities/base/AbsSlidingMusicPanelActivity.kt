@@ -92,6 +92,7 @@ import app.riynk.rpp.fragments.player.gradient.GradientPlayerFragment
 import app.riynk.rpp.fragments.player.material.MaterialFragment
 import app.riynk.rpp.fragments.player.md3.MD3PlayerFragment
 import app.riynk.rpp.fragments.player.normal.PlayerFragment
+import app.riynk.rpp.fragments.player.recommended.RPRecommendedPlayerFragment
 import app.riynk.rpp.fragments.player.peek.PeekPlayerFragment
 import app.riynk.rpp.fragments.player.plain.PlainPlayerFragment
 import app.riynk.rpp.fragments.player.simple.SimplePlayerFragment
@@ -595,6 +596,7 @@ abstract class AbsSlidingMusicPanelActivity : AbsMusicServiceActivity(),
             Circle -> CirclePlayerFragment()
             Classic -> ClassicPlayerFragment()
             MD3 -> MD3PlayerFragment()
+            RPRecommended -> RPRecommendedPlayerFragment()
             else -> PlayerFragment()
         } // must extend AbsPlayerFragment
         supportFragmentManager.commit {
