@@ -140,12 +140,15 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
                 resources.displayMetrics
             )
         )
-        binding.ttmlLyricsView.setTextSizes(
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, currentTextSize, resources.displayMetrics),
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, normalTextSize, resources.displayMetrics)
+        // Local Player uses 30sp bold for the primary lyric at rest and while active.
+        // Keep the legacy LRC sizing above unchanged; these values apply only to TTML.
+        val ttmlMainSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP, 30f, resources.displayMetrics
         )
+        binding.ttmlLyricsView.setTextSizes(ttmlMainSize, ttmlMainSize)
         binding.ttmlLyricsView.setCurrentColor(accentColor())
-        binding.ttmlLyricsView.setNormalColor(0x99FFFFFF.toInt())
+        binding.ttmlLyricsView.setNormalColor(0x66FFFFFF.toInt())
+        binding.ttmlLyricsView.setBackgroundVocalColor(0x66FFFFFF.toInt())
         binding.ttmlLyricsView.setPlaybackRate(PreferenceUtil.lyricsPlaybackRate)
         binding.ttmlLyricsView.setOnSeekListener {
             MusicPlayerRemote.seekTo(it.toInt())
