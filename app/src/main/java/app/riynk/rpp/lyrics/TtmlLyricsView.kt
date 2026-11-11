@@ -17,7 +17,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import kotlin.math.max
-import kotlin.math.min
 
 /**
  * TTML renderer with timed segment highlighting, agent-based left/right alignment,
@@ -125,8 +124,12 @@ class TtmlLyricsView @JvmOverloads constructor(
     private fun buildLayout(line: TtmlLine, index: Int): StaticLayout {
         val activeLine = index == currentLine
         val builder = SpannableStringBuilder()
+        paint.color = normalColor
         if (line.segments.isEmpty()) {
             builder.append(line.text)
+            if (activeLine && builder.isNotEmpty()) {
+                builder.setSpan(ForegroundColorSpan(currentColor), 0, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
         } else {
             line.segments.forEach { segment ->
                 val start = builder.length
@@ -141,7 +144,7 @@ class TtmlLyricsView @JvmOverloads constructor(
                         ForegroundColorSpan(
                             if (segmentActive) currentColor
                             else if (segment.isBackground) backgroundColor
-                            else if (activeLine) normalColor else normalColor
+                            else normalColor
                         ),
                         start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
@@ -201,7 +204,6 @@ class TtmlLyricsView @JvmOverloads constructor(
         val items = lyrics?.lines ?: return
         if (items.isEmpty()) return
         val tops = lineTopPositions(items)
-        val contentWidth = max(1, width - paddingLeft - paddingRight)
         items.forEachIndexed { index, line ->
             val layout = buildLayout(line, index)
             val y = paddingTop + tops[index] - scrollOffset
