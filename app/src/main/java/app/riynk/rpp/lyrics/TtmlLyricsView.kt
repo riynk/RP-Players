@@ -88,6 +88,17 @@ class TtmlLyricsView @JvmOverloads constructor(
         invalidate()
     }
 
+    /** Background-vocal size and inter-line spacing are expressed in sp and dp. */
+    fun setBackgroundVocalTextSize(sizeSp: Float) {
+        backgroundTextSize = sizeSp.coerceIn(12f, 40f)
+        invalidate()
+    }
+
+    fun setLyricsLineSpacing(spacingDp: Float) {
+        lineGap = spacingDp.coerceIn(0f, 32f)
+        invalidate()
+    }
+
     fun setCurrentColor(color: Int) {
         currentColor = color
         invalidate()
