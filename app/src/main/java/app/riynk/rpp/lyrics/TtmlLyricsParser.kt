@@ -202,6 +202,11 @@ object TtmlLyricsParser {
                 }
                 XmlPullParser.TEXT, XmlPullParser.CDSECT -> {
                     val value = parser.text ?: ""
+                    // Ignore XML pretty-print indentation while preserving literal
+                    // spaces between lyric spans and spaces inside timed spans.
+                    if (value.isBlank() && (value.contains('\n') || value.contains('\r'))) {
+                        continue
+                    }
                     result.text.append(value)
                     if (value.isNotEmpty()) {
                         result.segments.add(
