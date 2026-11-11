@@ -50,12 +50,10 @@ import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.lyrics.CoverLrcView
 import app.riynk.rpp.lyrics.LyricsDocument
 import app.riynk.rpp.lyrics.LyricsRepository
-import app.riynk.rpp.lyrics.TtmlLyricsView
 import app.riynk.rpp.model.lyrics.Lyrics
 import app.riynk.rpp.transform.CarousalPagerTransformer
 import app.riynk.rpp.transform.ParallaxPagerTransformer
 import app.riynk.rpp.util.CoverLyricsType
-import app.riynk.rpp.util.LyricUtil
 import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.color.MediaNotificationProcessor
 import kotlinx.coroutines.Dispatchers
