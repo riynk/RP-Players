@@ -18,7 +18,8 @@ import app.riynk.rpp.fragments.base.AbsPlayerFragment
 import app.riynk.rpp.fragments.base.goToLyrics
 import app.riynk.rpp.helper.MusicPlayerRemote
 import app.riynk.rpp.lyrics.TtmlLyrics
-import app.riynk.rpp.lyrics.TtmlLyricsParser
+import app.riynk.rpp.lyrics.LyricsDocument
+import app.riynk.rpp.lyrics.LyricsRepository
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.model.lyrics.AbsSynchronizedLyrics
 import app.riynk.rpp.model.lyrics.Lyrics
@@ -27,6 +28,8 @@ import app.riynk.rpp.util.PreferenceUtil
 import app.riynk.rpp.util.color.MediaNotificationProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
 import org.jaudiotagger.audio.exceptions.CannotReadException
 import java.io.File
 import java.io.FileNotFoundException
@@ -43,6 +46,7 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
 
     private var lyrics: Lyrics? = null
     private var ttmlLyrics: TtmlLyrics? = null
+    private var lyricsLoadJob: Job? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -101,32 +105,31 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
     }
 
     private fun updateLyrics() {
-        lyrics = null
-        ttmlLyrics = null
-        lifecycleScope.launch(Dispatchers.IO) {
-            val song = MusicPlayerRemote.currentSong
-            val sidecarTtml = LyricUtil.getSyncedLyricsTtmlFile(song)
-                ?.let { runCatching { it.readText() }.getOrNull() }
-            val parsedSidecar = sidecarTtml?.let { TtmlLyricsParser.parse(it) }
-            val parsedTtml = parsedSidecar ?: LyricUtil.getEmbeddedTtmlLyrics(song.data)
-                ?.let { TtmlLyricsParser.parse(it) }
-            if (parsedTtml?.isValid == true) {
-                ttmlLyrics = parsedTtml
+        val currentSong = MusicPlayerRemote.currentSong
+        lyricsLoadJob?.cancel()
+        lyricsLine1.text = null
+        lyricsLine2.text = null
+        lyricsLoadJob = lifecycleScope.launch {
+            val document = withContext(Dispatchers.IO) {
+                LyricsRepository.load(currentSong)
+            }
+            if (_binding == null || MusicPlayerRemote.currentSong.id != currentSong.id) {
                 return@launch
             }
 
-            lyrics = try {
-                val lrcFile: File? = LyricUtil.getSyncedLyricsFile(song)
-                val data: String = LyricUtil.getStringFromLrc(lrcFile)
-                Lyrics.parse(song,
-                    data.ifEmpty {
-                        LyricUtil.getEmbeddedSyncedLyrics(song.data)
-                    }
-                )
-            } catch (err: FileNotFoundException) {
-                null
-            } catch (e: CannotReadException) {
-                null
+            when (document) {
+                is LyricsDocument.Ttml -> {
+                    ttmlLyrics = document.value
+                    lyrics = null
+                }
+                is LyricsDocument.Lrc -> {
+                    ttmlLyrics = null
+                    lyrics = Lyrics.parse(currentSong, document.content)
+                }
+                LyricsDocument.None -> {
+                    ttmlLyrics = null
+                    lyrics = null
+                }
             }
         }
     }
@@ -203,6 +206,8 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
         PreferenceManager.getDefaultSharedPreferences(requireContext())
             .unregisterOnSharedPreferenceChangeListener(this)
         progressViewUpdateHelper?.stop()
+        lyricsLoadJob?.cancel()
+        lyricsLoadJob = null
         _binding = null
     }
 }
