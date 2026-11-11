@@ -277,7 +277,11 @@ public class LrcView extends View {
     public void setTextSizes(float currentTextSize, float normalTextSize) {
         mCurrentTextSize = currentTextSize;
         mNormalTextSize = normalTextSize;
-        mLrcPaint.setTextSize(currentTextSize);
+        // LrcEntry caches StaticLayout instances, so changing only the paint
+        // leaves already-loaded lyrics at their previous size. Rebuild them.
+        mLrcPaint.setTextSize(normalTextSize);
+        initEntryList();
+        requestLayout();
         postInvalidate();
     }
 
