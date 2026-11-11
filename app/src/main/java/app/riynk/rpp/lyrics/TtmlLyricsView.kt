@@ -4,6 +4,8 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
+import android.graphics.Shader
 import android.graphics.Paint
 import android.text.Layout
 import android.text.SpannableStringBuilder
@@ -13,7 +15,7 @@ import android.text.StaticLayout
 import android.graphics.Typeface
 import android.text.TextPaint
 import android.text.style.RelativeSizeSpan
-import android.text.style.ReplacementSpan
+import android.text.style.CharacterStyle
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -146,6 +148,8 @@ class TtmlLyricsView @JvmOverloads constructor(
     private fun buildLayout(line: TtmlLine, index: Int): StaticLayout {
         val activeLine = isLineActive(index, line)
         val builder = SpannableStringBuilder()
+        paint.textSize = if (activeLine) currentTextSize else normalTextSize
+        paint.typeface = Typeface.DEFAULT_BOLD
         paint.color = normalColor
         if (line.segments.isEmpty()) {
             builder.append(line.text)
@@ -173,11 +177,18 @@ class TtmlLyricsView @JvmOverloads constructor(
                                 (effectiveEnd - segment.startMs).toFloat()).coerceIn(0f, 1f)
                         else -> if (segmentActive) 1f else 0f
                     }
+                    // Keep normal text shaping/kerning across adjacent TTML spans.
+                    // ReplacementSpan draws each fragment independently and makes
+                    // syllables look visually disconnected.
+                    val startX = paint.measureText(builder, 0, start)
+                    val segmentWidth = paint.measureText(segment.text).coerceAtLeast(1f)
                     builder.setSpan(
-                        ProgressiveFillSpan(
+                        ProgressiveFillCharacterSpan(
                             baseColor = if (segment.isBackground) backgroundColor else normalColor,
-                            activeColor = if (segment.isBackground) currentColor else currentColor,
-                            progress = if (activeLine) progress else 0f
+                            activeColor = currentColor,
+                            progress = if (activeLine) progress else 0f,
+                            startX = startX,
+                            endX = startX + segmentWidth
                         ),
                         start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
@@ -190,7 +201,6 @@ class TtmlLyricsView @JvmOverloads constructor(
                 }
             }
         }
-        paint.textSize = if (activeLine) currentTextSize else normalTextSize
         val alignment = if (line.alignment == TtmlAlignment.RIGHT) {
             Layout.Alignment.ALIGN_OPPOSITE
         } else {
@@ -310,52 +320,36 @@ class TtmlLyricsView @JvmOverloads constructor(
 
 
 /**
- * Draws the inactive lyric first, then reveals the active color progressively
- * across the segment according to the source timestamps.
+ * Applies karaoke fill as a draw-state shader rather than replacing the glyph run.
+ * CharacterStyle preserves Android's text shaping and kerning across TTML spans.
  */
-private class ProgressiveFillSpan(
+private class ProgressiveFillCharacterSpan(
     private val baseColor: Int,
     private val activeColor: Int,
-    private val progress: Float
-) : ReplacementSpan() {
-    override fun getSize(
-        paint: Paint,
-        text: CharSequence,
-        start: Int,
-        end: Int,
-        fm: Paint.FontMetricsInt?
-    ): Int = paint.measureText(text, start, end).roundToInt()
-
-    override fun draw(
-        canvas: Canvas,
-        text: CharSequence,
-        start: Int,
-        end: Int,
-        x: Float,
-        top: Int,
-        y: Int,
-        bottom: Int,
-        paint: Paint
-    ) {
-        val width = paint.measureText(text, start, end)
-        val oldColor = paint.color
-        val oldShader = paint.shader
-        paint.shader = null
-        paint.color = baseColor
-        canvas.drawText(text, start, end, x, y.toFloat(), paint)
-        if (progress > 0f && width > 0f) {
-            canvas.save()
-            canvas.clipRect(
-                x,
-                y + paint.ascent(),
-                x + width * progress.coerceIn(0f, 1f),
-                y + paint.descent()
-            )
-            paint.color = activeColor
-            canvas.drawText(text, start, end, x, y.toFloat(), paint)
-            canvas.restore()
+    private val progress: Float,
+    private val startX: Float,
+    private val endX: Float
+) : CharacterStyle() {
+    override fun updateDrawState(textPaint: TextPaint) {
+        val amount = progress.coerceIn(0f, 1f)
+        when {
+            amount <= 0f -> {
+                textPaint.shader = null
+                textPaint.color = baseColor
+            }
+            amount >= 1f -> {
+                textPaint.shader = null
+                textPaint.color = activeColor
+            }
+            else -> {
+                textPaint.color = Color.WHITE
+                textPaint.shader = LinearGradient(
+                    startX, 0f, endX.coerceAtLeast(startX + 1f), 0f,
+                    intArrayOf(activeColor, activeColor, baseColor),
+                    floatArrayOf(0f, amount, amount),
+                    Shader.TileMode.CLAMP
+                )
+            }
         }
-        paint.color = oldColor
-        paint.shader = oldShader
     }
 }
