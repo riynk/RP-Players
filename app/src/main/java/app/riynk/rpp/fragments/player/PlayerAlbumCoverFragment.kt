@@ -131,7 +131,8 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
                             MusicPlayerRemote.resumePlaying()
                         }
                         setLyrics(document.value)
-                        isVisible = true
+                        isVisible = PreferenceUtil.showLyrics &&
+                            PreferenceUtil.lyricsType == CoverLyricsType.REPLACE_COVER
                         post { updateTime(MusicPlayerRemote.songProgressMillis.toLong()) }
                     }
                     lrcView.isVisible = false
@@ -141,7 +142,8 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
                     binding.ttmlLyricsView.setLyrics(null)
                     binding.ttmlLyricsView.isVisible = false
                     lrcView.loadLrc(document.content)
-                    lrcView.isVisible = true
+                    lrcView.isVisible = PreferenceUtil.showLyrics &&
+                        PreferenceUtil.lyricsType == CoverLyricsType.REPLACE_COVER
                 }
                 LyricsDocument.None -> {
                     usingTtmlLyrics = false
@@ -149,7 +151,8 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
                     binding.ttmlLyricsView.isVisible = false
                     lrcView.reset()
                     lrcView.setLabel(context?.getString(R.string.no_lyrics_found))
-                    lrcView.isVisible = true
+                    lrcView.isVisible = PreferenceUtil.showLyrics &&
+                        PreferenceUtil.lyricsType == CoverLyricsType.REPLACE_COVER
                 }
             }
         }
