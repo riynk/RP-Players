@@ -42,5 +42,13 @@
             app:lrcTextSize="32sp"
             app:lrcTimelineColor="@color/transparent"
             tools:visibility="visible" />
+
+        <app.riynk.rpp.lyrics.TtmlLyricsView
+            android:id="@+id/ttml_lyrics_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="16dp"
+            android:padding="24dp"
+            android:visibility="gone" />
     </com.bosphere.fadingedgelayout.FadingEdgeLayout>
 </FrameLayout>
