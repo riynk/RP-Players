@@ -45,6 +45,7 @@ import app.riynk.rpp.DESATURATED_COLOR
 import app.riynk.rpp.ENABLE_SEARCH_PLAYLIST
 import app.riynk.rpp.EXPAND_NOW_PLAYING_PANEL
 import app.riynk.rpp.EXTRA_SONG_INFO
+import app.riynk.rpp.FULL_LYRICS_TYPE
 import app.riynk.rpp.FILTER_SONG
 import app.riynk.rpp.GENERAL_THEME
 import app.riynk.rpp.GENRE_SORT_ORDER
@@ -818,17 +819,44 @@ object PreferenceUtil {
     val isSnowFalling
         get() = sharedPreferences.getBoolean(SNOWFALL, false)
 
+    val isRpLyrics: Boolean
+        get() = sharedPreferences.getString(FULL_LYRICS_TYPE, "0") == "1"
+
     val lyricsType: CoverLyricsType
-        get() = if (sharedPreferences.getString(LYRICS_TYPE, "0") == "0") {
-            CoverLyricsType.REPLACE_COVER
-        } else {
-            CoverLyricsType.OVER_COVER
+        get() = when (sharedPreferences.getString(LYRICS_TYPE, "0")) {
+            "0" -> CoverLyricsType.REPLACE_COVER
+            "2" -> CoverLyricsType.BELOW_ARTWORK
+            else -> CoverLyricsType.OVER_COVER
         }
 
     var playbackSpeed
         get() = sharedPreferences
             .getFloat(PLAYBACK_SPEED, 1F)
         set(value) = sharedPreferences.edit { putFloat(PLAYBACK_SPEED, value) }
+
+    var lyricsPlaybackRate: Float
+        get() = sharedPreferences.getFloat("rp_lyrics_playback_rate", 1.0f)
+        set(value) = sharedPreferences.edit {
+            putFloat("rp_lyrics_playback_rate", value.coerceIn(0.5f, 2.0f))
+        }
+
+    var lyricsMainTextSize: Int
+        get() = sharedPreferences.getInt("rp_lyrics_main_text_size", 30)
+        set(value) = sharedPreferences.edit {
+            putInt("rp_lyrics_main_text_size", value.coerceIn(16, 48))
+        }
+
+    var lyricsBackgroundTextSize: Int
+        get() = sharedPreferences.getInt("rp_lyrics_background_text_size", 24)
+        set(value) = sharedPreferences.edit {
+            putInt("rp_lyrics_background_text_size", value.coerceIn(12, 40))
+        }
+
+    var lyricsLineSpacing: Int
+        get() = sharedPreferences.getInt("rp_lyrics_line_spacing", 12)
+        set(value) = sharedPreferences.edit {
+            putInt("rp_lyrics_line_spacing", value.coerceIn(0, 32))
+        }
 
     var playbackPitch
         get() = sharedPreferences
@@ -862,5 +890,5 @@ object PreferenceUtil {
 }
 
 enum class CoverLyricsType {
-    REPLACE_COVER, OVER_COVER
+    REPLACE_COVER, OVER_COVER, BELOW_ARTWORK
 }

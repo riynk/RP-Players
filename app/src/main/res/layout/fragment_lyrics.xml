@@ -8,10 +8,24 @@
     android:fitsSystemWindows="true"
     android:paddingBottom="@dimen/mini_player_height">
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/colorBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        app:srcCompat="@color/black_color" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/rp_artwork_background_overlay" />
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
         android:padding="0dp"
         app:contentInsetLeft="0dp"
         app:contentInsetStart="0dp"
@@ -26,7 +40,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="?attr/colorSurface"
+            android:background="@android:color/transparent"
             android:gravity="start"
             app:contentInsetLeft="0dp"
             app:contentInsetStart="0dp"
@@ -68,6 +82,16 @@
             app:lrcPadding="8dp"
             app:lrcTextGravity="left"
             app:lrcTextSize="28sp" />
+
+        <app.riynk.rpp.lyrics.TtmlLyricsView
+            android:id="@+id/ttmlLyricsView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/noLyricsFound"

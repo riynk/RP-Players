@@ -254,6 +254,36 @@ class CoverLrcView @JvmOverloads constructor(
         postInvalidate()
     }
 
+    /**
+     * Updates the active and inactive lyric sizes.
+     *
+     * Sizes are supplied in pixels so callers can resolve SP using the
+     * current display density before passing them to this view.
+     */
+    fun setTextSizes(currentTextSizePx: Float, normalTextSizePx: Float) {
+        runOnUi {
+            mCurrentTextSize = currentTextSizePx.coerceAtLeast(1f)
+            mNormalTextSize = normalTextSizePx.coerceAtLeast(1f)
+            mLrcPaint.textSize = mCurrentTextSize
+            // LrcEntry caches StaticLayout dimensions, so rebuild them after
+            // changing typography to keep line wrapping and scroll offsets correct.
+            initEntryList()
+            invalidate()
+        }
+    }
+
+    /**
+     * Sets the vertical gap between LRC rows in pixels.
+     * The entry layouts and cached scroll offsets are rebuilt immediately.
+     */
+    fun setLyricsLineSpacing(spacingPx: Float) {
+        runOnUi {
+            mDividerHeight = spacingPx.coerceAtLeast(0f)
+            initEntryList()
+            invalidate()
+        }
+    }
+
     fun setCurrentColor(currentColor: Int) {
         mCurrentTextColor = currentColor
         postInvalidate()

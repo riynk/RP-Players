@@ -15,6 +15,7 @@
 package app.riynk.rpp.fragments.player.normal
 
 import android.animation.ArgbEvaluator
+import androidx.annotation.LayoutRes
 import android.animation.ValueAnimator
 import android.content.SharedPreferences
 import android.graphics.drawable.GradientDrawable
@@ -37,7 +38,7 @@ import app.riynk.rpp.util.ViewUtil
 import app.riynk.rpp.util.color.MediaNotificationProcessor
 import app.riynk.rpp.views.DrawableGradient
 
-class PlayerFragment : AbsPlayerFragment(R.layout.fragment_player),
+open class PlayerFragment(@LayoutRes layout: Int = R.layout.fragment_player) : AbsPlayerFragment(layout),
     SharedPreferences.OnSharedPreferenceChangeListener {
 
     private var lastColor: Int = 0

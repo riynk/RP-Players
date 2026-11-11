@@ -3,7 +3,7 @@ name: Android debug build
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, RP-DEV]
     paths:
       - "app/**"
       - "appthemehelper/**"

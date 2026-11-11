@@ -274,6 +274,22 @@ public class LrcView extends View {
         postInvalidate();
     }
 
+    public void setTextSizes(float currentTextSize, float normalTextSize) {
+        mCurrentTextSize = currentTextSize;
+        mNormalTextSize = normalTextSize;
+        // LrcEntry caches StaticLayout instances, so changing only the paint
+        // leaves already-loaded lyrics at their previous size. Rebuild them.
+        mLrcPaint.setTextSize(currentTextSize);
+        initEntryList();
+        requestLayout();
+        postInvalidate();
+    }
+
+    public void setLyricsLineSpacing(float spacingPx) {
+        mDividerHeight = Math.max(0f, spacingPx);
+        postInvalidate();
+    }
+
     public void setTimelineTextColor(int timelineTextColor) {
         mTimelineTextColor = timelineTextColor;
         postInvalidate();
@@ -447,8 +463,10 @@ public class LrcView extends View {
                         ((mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) >> 1)
                                 + mDividerHeight;
             }
-            if (i <= mCurrentLine) {
-                mLrcPaint.setTextSize(mNormalTextSize);
+            if (i == mCurrentLine) {
+                // The active line uses the configured main size. StaticLayout
+                // is measured at this size when entries are rebuilt.
+                mLrcPaint.setTextSize(mCurrentTextSize);
                 mLrcPaint.setColor(mCurrentTextColor);
             } else {
                 mLrcPaint.setTextSize(mNormalTextSize);
