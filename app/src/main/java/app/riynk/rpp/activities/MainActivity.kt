@@ -21,6 +21,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.contains
 import androidx.navigation.ui.setupWithNavController
@@ -50,13 +51,14 @@ class MainActivity : AbsCastActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         splashScreen.setOnExitAnimationListener { splashProvider ->
-            val animatedIcon = (splashProvider.iconView as? ImageView)?.drawable as? Animatable
-            if (animatedIcon != null) {
-                // Android can hand the exit callback an animated vector that has
-                // already reached its final frame. Restart it for every cold launch.
-                animatedIcon.stop()
-                animatedIcon.start()
-                splashProvider.view.postDelayed({ splashProvider.remove() }, 1000L)
+            val iconView = splashProvider.iconView as? ImageView
+            // Inflate a fresh animated-vector instance instead of reusing the drawable
+            // Android may have left on its final frame after the previous launch.
+            val freshIcon = AppCompatResources.getDrawable(this, R.drawable.avd_splash)?.mutate()
+            if (iconView != null && freshIcon is Animatable) {
+                iconView.setImageDrawable(freshIcon)
+                freshIcon.start()
+                splashProvider.view.postDelayed({ splashProvider.remove() }, 1100L)
             } else {
                 splashProvider.remove()
             }
