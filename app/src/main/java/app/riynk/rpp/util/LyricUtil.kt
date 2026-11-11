@@ -15,6 +15,7 @@ package app.riynk.rpp.util
 
 import android.util.Log
 import app.riynk.rpp.model.Song
+import app.riynk.rpp.lyrics.TtmlLyricsParser
 import app.riynk.rpp.model.lyrics.AbsSynchronizedLyrics
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -145,6 +146,29 @@ object LyricUtil {
             Log.i("Error", "Error Occurred")
         }
         return ""
+    }
+
+
+    /**
+     * TTML sidecars are preferred over LRC. Check the audio directory first,
+     * then the legacy RetroMusic lyrics directory, matching the LRC lookup.
+     */
+    fun getSyncedLyricsTtmlFile(song: Song): File? {
+        val audioFile = File(song.data)
+        val adjacent = audioFile.parentFile?.resolve("${audioFile.nameWithoutExtension}.ttml")
+        if (adjacent?.isFile == true) return adjacent
+
+        val legacy = File(lrcRootPath, "${song.title} - ${song.artistName}.ttml")
+        return legacy.takeIf { it.isFile }
+    }
+
+    fun getEmbeddedTtmlLyrics(data: String): String? {
+        val embedded = try {
+            AudioFileIO.read(File(data)).tagOrCreateDefault.getFirst(FieldKey.LYRICS)
+        } catch (_: Exception) {
+            return null
+        }
+        return embedded?.takeIf { TtmlLyricsParser.parse(it)?.isValid == true }
     }
 
     fun getSyncedLyricsFile(song: Song): File? {
