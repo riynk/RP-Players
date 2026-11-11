@@ -121,8 +121,17 @@ class TtmlLyricsView @JvmOverloads constructor(
         return result
     }
 
+    private fun isLineActive(index: Int, line: TtmlLine): Boolean {
+        val items = lyrics?.lines ?: return index == currentLine
+        val nextStart = items.drop(index + 1)
+            .firstOrNull { it.startMs > line.startMs }?.startMs
+        val effectiveEnd = line.endMs ?: nextStart
+        return currentTime >= line.startMs &&
+            (effectiveEnd == null || currentTime < effectiveEnd)
+    }
+
     private fun buildLayout(line: TtmlLine, index: Int): StaticLayout {
-        val activeLine = index == currentLine
+        val activeLine = isLineActive(index, line)
         val builder = SpannableStringBuilder()
         paint.color = normalColor
         if (line.segments.isEmpty()) {
