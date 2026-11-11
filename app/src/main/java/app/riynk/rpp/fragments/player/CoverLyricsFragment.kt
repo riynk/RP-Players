@@ -17,6 +17,8 @@ import app.riynk.rpp.fragments.base.AbsMusicServiceFragment
 import app.riynk.rpp.fragments.base.AbsPlayerFragment
 import app.riynk.rpp.fragments.base.goToLyrics
 import app.riynk.rpp.helper.MusicPlayerRemote
+import app.riynk.rpp.lyrics.TtmlLyrics
+import app.riynk.rpp.lyrics.TtmlLyricsParser
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.model.lyrics.AbsSynchronizedLyrics
 import app.riynk.rpp.model.lyrics.Lyrics
@@ -40,6 +42,7 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
     private val lyricsLine2: TextView get() = binding.playerLyricsLine2
 
     private var lyrics: Lyrics? = null
+    private var ttmlLyrics: TtmlLyrics? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -99,14 +102,23 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
 
     private fun updateLyrics() {
         lyrics = null
+        ttmlLyrics = null
         lifecycleScope.launch(Dispatchers.IO) {
             val song = MusicPlayerRemote.currentSong
+            val ttmlText = LyricUtil.getSyncedLyricsTtmlFile(song)
+                ?.let { runCatching { it.readText() }.getOrNull() }
+                ?: LyricUtil.getEmbeddedTtmlLyrics(song.data)
+            val parsedTtml = ttmlText?.let { TtmlLyricsParser.parse(it) }
+            if (parsedTtml?.isValid == true) {
+                ttmlLyrics = parsedTtml
+                return@launch
+            }
+
             lyrics = try {
                 val lrcFile: File? = LyricUtil.getSyncedLyricsFile(song)
                 val data: String = LyricUtil.getStringFromLrc(lrcFile)
                 Lyrics.parse(song,
                     data.ifEmpty {
-                        // Get Embedded Lyrics
                         LyricUtil.getEmbeddedSyncedLyrics(song.data)
                     }
                 )
@@ -126,14 +138,16 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
             return
         }
 
-        if (lyrics !is AbsSynchronizedLyrics) return
-        val synchronizedLyrics = lyrics as AbsSynchronizedLyrics
+        val line = ttmlLyrics?.let { document ->
+            val index = document.lines.indexOfLast { it.startMs <= progress.toLong() }
+                .coerceAtLeast(0)
+            document.lines.getOrNull(index)?.text.orEmpty()
+        } ?: (lyrics as? AbsSynchronizedLyrics)?.getLine(progress) ?: return
 
         lyricsLayout.isVisible = true
         lyricsLayout.alpha = 1f
 
         val oldLine = lyricsLine2.text.toString()
-        val line = synchronizedLyrics.getLine(progress)
 
         if (oldLine != line || oldLine.isEmpty()) {
             lyricsLine1.text = oldLine
