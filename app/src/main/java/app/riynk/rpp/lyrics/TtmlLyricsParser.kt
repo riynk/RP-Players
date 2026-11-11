@@ -241,15 +241,15 @@ object TtmlLyricsParser {
                     val nestedEnd = explicitFinish ?: if (begin == null) parentEnd else null
                     val background = inheritedBackground ||
                         (parser.getAttributeValue(NS_TTM, "role") == "x-bg")
+                    val hasOwnTiming = parser.getAttributeValue(null, "begin") != null ||
+                        parser.getAttributeValue(null, "end") != null ||
+                        parser.getAttributeValue(null, "dur") != null
 
                     val nested = parseChildren(
                         parser, tag, start, nestedEnd, background, frameRate, tickRate, appleTiming
                     )
                     result.text.append(nested.text)
                     if (tag == "span") {
-                        val hasOwnTiming = parser.getAttributeValue(null, "begin") != null ||
-                            parser.getAttributeValue(null, "end") != null ||
-                            parser.getAttributeValue(null, "dur") != null
                         if (nested.segments.isEmpty()) {
                             val value = nested.text.toString()
                             if (value.isNotEmpty()) {
