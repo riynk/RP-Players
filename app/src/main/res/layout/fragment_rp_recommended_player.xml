@@ -60,7 +60,7 @@
             android:textAppearance="@style/TextViewHeadline6"
             android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/rpCastButton"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Hold On" />
