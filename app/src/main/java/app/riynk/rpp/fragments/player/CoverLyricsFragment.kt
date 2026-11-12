@@ -39,6 +39,7 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
     private val lyricsLayout: FrameLayout get() = binding.playerLyrics
     private val lyricsLine1: TextView get() = binding.playerLyricsLine1
     private val lyricsLine2: TextView get() = binding.playerLyricsLine2
+    private val lyricsLine3: TextView get() = binding.playerLyricsLine3
 
     private var lyrics: Lyrics? = null
     private var ttmlLyrics: TtmlLyrics? = null
@@ -105,6 +106,7 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
         lyricsLoadJob?.cancel()
         lyricsLine1.text = null
         lyricsLine2.text = null
+        lyricsLine3.text = null
         lyricsLoadJob = lifecycleScope.launch {
             val document = withContext(Dispatchers.IO) {
                 LyricsRepository.load(currentSong)
@@ -147,32 +149,35 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
         lyricsLayout.isVisible = true
         lyricsLayout.alpha = 1f
 
-        val oldLine = lyricsLine2.text.toString()
+        val oldLine = lyricsLine3.text.toString()
 
         if (oldLine != line || oldLine.isEmpty()) {
-            lyricsLine1.text = oldLine
-            lyricsLine2.text = line
+            lyricsLine1.text = lyricsLine2.text
+            lyricsLine2.text = oldLine
+            lyricsLine3.text = line
 
-            lyricsLine1.isVisible = true
-            lyricsLine2.isVisible = true
+            lyricsLine1.isVisible = lyricsLine1.text.isNotEmpty()
+            lyricsLine2.isVisible = lyricsLine2.text.isNotEmpty()
+            lyricsLine3.isVisible = true
 
-            lyricsLine2.measure(
+            lyricsLine3.measure(
                 View.MeasureSpec.makeMeasureSpec(
                     lyricsLine2.measuredWidth,
                     View.MeasureSpec.EXACTLY
                 ),
                 View.MeasureSpec.UNSPECIFIED
             )
-            val h: Float = lyricsLine2.measuredHeight.toFloat()
+            val h: Float = lyricsLine3.measuredHeight.toFloat()
 
-            lyricsLine1.alpha = 1f
-            lyricsLine1.translationY = 0f
             lyricsLine1.animate().alpha(0f).translationY(-h).duration =
                 AbsPlayerFragment.VISIBILITY_ANIM_DURATION
-
             lyricsLine2.alpha = 0f
             lyricsLine2.translationY = h
             lyricsLine2.animate().alpha(1f).translationY(0f).duration =
+                AbsPlayerFragment.VISIBILITY_ANIM_DURATION
+            lyricsLine3.alpha = 0f
+            lyricsLine3.translationY = h
+            lyricsLine3.animate().alpha(1f).translationY(0f).duration =
                 AbsPlayerFragment.VISIBILITY_ANIM_DURATION
         }
     }
@@ -188,6 +193,7 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
                 lyricsLayout.isVisible = false
                 lyricsLine1.text = null
                 lyricsLine2.text = null
+                lyricsLine3.text = null
             }
     }
 
