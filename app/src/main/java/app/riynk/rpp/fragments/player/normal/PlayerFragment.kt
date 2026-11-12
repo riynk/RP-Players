@@ -149,7 +149,7 @@ open class PlayerFragment(@LayoutRes layout: Int = R.layout.fragment_player) : A
         binding.playerToolbar.setOnMenuItemClickListener(this)
         // RP Recommended exposes overflow at the upper-right; keep the bottom
         // action row dedicated to the four primary playback shortcuts.
-        view?.findViewById<View>(R.id.rpTopOverflow)?.setOnClickListener {
+        binding.root.findViewById<View>(R.id.rpTopOverflow)?.setOnClickListener {
             binding.playerToolbar.showOverflowMenu()
         }
         if (view?.findViewById<View>(R.id.rpTopOverflow) != null) {
