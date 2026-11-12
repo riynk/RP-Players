@@ -540,4 +540,9 @@
     <string name="listing_files" translatable="false" />
 
     <string name="rp_recommended_more">More options</string>
+    <string name="pref_background_artwork_title">Background artwork</string>
+    <string name="pref_background_artwork_source_title">Artwork source</string>
+    <string name="pref_background_artwork_source_summary">Choose the artwork used behind RP Recommended and the lyrics page</string>
+    <string name="pref_background_artwork_source_song">Song artwork</string>
+    <string name="pref_background_artwork_source_artist">Artist artwork</string>
 </resources>
