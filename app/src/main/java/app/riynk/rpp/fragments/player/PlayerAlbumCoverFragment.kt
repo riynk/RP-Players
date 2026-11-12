@@ -283,7 +283,7 @@ class PlayerAlbumCoverFragment : AbsMusicServiceFragment(R.layout.fragment_playe
         binding.viewPager.isVisible = true
 
         if (PreferenceUtil.lyricsType == CoverLyricsType.BELOW_ARTWORK) {
-            val belowArtworkHeight = (112 * resources.displayMetrics.density).toInt()
+            val belowArtworkHeight = (176 * resources.displayMetrics.density).toInt()
             binding.root.clipChildren = false
             binding.root.clipToPadding = false
             var parent = binding.root.parent
