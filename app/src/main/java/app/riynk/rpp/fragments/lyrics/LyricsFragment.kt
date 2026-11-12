@@ -49,6 +49,8 @@ import app.riynk.rpp.fragments.base.AbsMainActivityFragment
 import app.riynk.rpp.glide.BlurTransformation
 import app.riynk.rpp.glide.RetroGlideExtension
 import app.riynk.rpp.glide.RetroGlideExtension.simpleSongCoverOptions
+import app.riynk.rpp.glide.RetroGlideExtension.getArtistModel
+import app.riynk.rpp.glide.RetroGlideExtension.artistImageOptions
 import app.riynk.rpp.helper.MusicPlayerRemote
 import app.riynk.rpp.helper.MusicProgressViewUpdateHelper
 import app.riynk.rpp.lyrics.LrcView
@@ -233,22 +235,47 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
     private fun updateLyricsBackground() {
         if (_binding == null || !isAdded) return
         val target: ImageView = binding.colorBackground
+        val currentSong = song
         val previous = target.drawable?.constantState
             ?.newDrawable(resources)?.mutate()
             ?: ColorDrawable(Color.DKGRAY)
-        Glide.with(this)
-            .load(RetroGlideExtension.getSongModel(song))
-            .simpleSongCoverOptions(song)
-            .transform(
-                BlurTransformation.Builder(requireContext())
-                    .blurRadius(blurAmount.toFloat())
-                    .build()
-            )
-            .placeholder(previous)
-            .error(ColorDrawable(Color.DKGRAY))
-            .transition(DrawableTransitionOptions.withCrossFade(450))
-            .into(target)
+
+        fun displaySongArtwork() {
+            Glide.with(this)
+                .load(RetroGlideExtension.getSongModel(currentSong))
+                .simpleSongCoverOptions(currentSong)
+                .transform(
+                    BlurTransformation.Builder(requireContext())
+                        .blurRadius(blurAmount.toFloat())
+                        .build()
+                )
+                .placeholder(previous)
+                .error(ColorDrawable(Color.DKGRAY))
+                .transition(DrawableTransitionOptions.withCrossFade(450))
+                .into(target)
+        }
+
+        if (PreferenceUtil.backgroundArtworkSource == "artist") {
+            libraryViewModel.artist(currentSong.artistId).observe(viewLifecycleOwner) { artist ->
+                if (!isAdded || _binding == null || song.id != currentSong.id) return@observe
+                Glide.with(this)
+                    .load(getArtistModel(artist))
+                    .artistImageOptions(artist)
+                    .transform(
+                        BlurTransformation.Builder(requireContext())
+                            .blurRadius(blurAmount.toFloat())
+                            .build()
+                    )
+                    .placeholder(previous)
+                    .error(ColorDrawable(Color.DKGRAY))
+                    .transition(DrawableTransitionOptions.withCrossFade(450))
+                    .into(target)
+            }
+        } else {
+            displaySongArtwork()
+        }
     }
+
 
     private fun setupToolbar() {
         mainActivity.setSupportActionBar(binding.toolbar)
@@ -495,7 +522,7 @@ class LyricsFragment : AbsMainActivityFragment(R.layout.fragment_lyrics),
         sharedPreferences: SharedPreferences,
         key: String?
     ) {
-        if (key == NEW_BLUR_AMOUNT) updateLyricsBackground()
+        if (key == NEW_BLUR_AMOUNT || key == "rp_background_artwork_source") updateLyricsBackground()
         if (key != null && key in setOf(
                 "rp_lyrics_main_text_size",
                 "rp_lyrics_background_text_size",
