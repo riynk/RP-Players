@@ -113,7 +113,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.37"
+        app:layout_constraintHeight_percent="0.42"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rpRecommendedMetadata" />
 
@@ -121,7 +121,7 @@
     <View
         android:id="@+id/rpLyricsSpacer"
         android:layout_width="0dp"
-        android:layout_height="112dp"
+        android:layout_height="176dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
