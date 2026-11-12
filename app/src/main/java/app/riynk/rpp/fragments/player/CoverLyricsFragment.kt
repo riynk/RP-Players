@@ -169,6 +169,8 @@ class CoverLyricsFragment : AbsMusicServiceFragment(R.layout.fragment_cover_lyri
             )
             val h: Float = lyricsLine3.measuredHeight.toFloat()
 
+            lyricsLine1.alpha = 1f
+            lyricsLine1.translationY = 0f
             lyricsLine1.animate().alpha(0f).translationY(-h).duration =
                 AbsPlayerFragment.VISIBILITY_ANIM_DURATION
             lyricsLine2.alpha = 0f
