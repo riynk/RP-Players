@@ -18,6 +18,8 @@ import android.animation.ArgbEvaluator
 import androidx.annotation.LayoutRes
 import android.animation.ValueAnimator
 import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
@@ -145,6 +147,14 @@ open class PlayerFragment(@LayoutRes layout: Int = R.layout.fragment_player) : A
         //binding.playerToolbar.menu.setUpWithIcons()
         binding.playerToolbar.setNavigationOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
         binding.playerToolbar.setOnMenuItemClickListener(this)
+        // RP Recommended exposes overflow at the upper-right; keep the bottom
+        // action row dedicated to the four primary playback shortcuts.
+        view?.findViewById<View>(R.id.rpTopOverflow)?.setOnClickListener {
+            binding.playerToolbar.showOverflowMenu()
+        }
+        if (view?.findViewById<View>(R.id.rpTopOverflow) != null) {
+            binding.playerToolbar.overflowIcon = ColorDrawable(Color.TRANSPARENT)
+        }
 
         ToolbarContentTintHelper.colorizeToolbar(
             binding.playerToolbar,
