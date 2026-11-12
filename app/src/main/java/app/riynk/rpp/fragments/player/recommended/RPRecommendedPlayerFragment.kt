@@ -14,6 +14,8 @@ import app.riynk.rpp.fragments.player.normal.PlayerFragment
 import app.riynk.rpp.glide.BlurTransformation
 import app.riynk.rpp.glide.RetroGlideExtension
 import app.riynk.rpp.glide.RetroGlideExtension.simpleSongCoverOptions
+import app.riynk.rpp.glide.RetroGlideExtension.getArtistModel
+import app.riynk.rpp.glide.RetroGlideExtension.artistImageOptions
 import app.riynk.rpp.helper.MusicPlayerRemote
 import app.riynk.rpp.util.CoverLyricsType
 import app.riynk.rpp.util.PreferenceUtil
@@ -41,23 +43,47 @@ class RPRecommendedPlayerFragment : PlayerFragment(R.layout.fragment_rp_recommen
     }
 
     private fun updateBlur() {
-        val target = backgroundImage ?: return
         if (!isAdded) return
+        val target = backgroundImage ?: return
+        val song = MusicPlayerRemote.currentSong
         val previous = target.drawable?.constantState
             ?.newDrawable(resources)?.mutate()
             ?: ColorDrawable(Color.DKGRAY)
-        Glide.with(this)
-            .load(RetroGlideExtension.getSongModel(MusicPlayerRemote.currentSong))
-            .simpleSongCoverOptions(MusicPlayerRemote.currentSong)
-            .transform(
-                BlurTransformation.Builder(requireContext())
-                    .blurRadius(blurAmount.toFloat())
-                    .build()
-            )
-            .placeholder(previous)
-            .error(ColorDrawable(Color.DKGRAY))
-            .transition(DrawableTransitionOptions.withCrossFade(450))
-            .into(target)
+
+        fun displaySongArtwork() {
+            Glide.with(this)
+                .load(RetroGlideExtension.getSongModel(song))
+                .simpleSongCoverOptions(song)
+                .transform(
+                    BlurTransformation.Builder(requireContext())
+                        .blurRadius(blurAmount.toFloat())
+                        .build()
+                )
+                .placeholder(previous)
+                .error(ColorDrawable(Color.DKGRAY))
+                .transition(DrawableTransitionOptions.withCrossFade(450))
+                .into(target)
+        }
+
+        if (PreferenceUtil.backgroundArtworkSource == "artist") {
+            libraryViewModel.artist(song.artistId).observe(viewLifecycleOwner) { artist ->
+                if (!isAdded || MusicPlayerRemote.currentSong.id != song.id) return@observe
+                Glide.with(this)
+                    .load(getArtistModel(artist))
+                    .artistImageOptions(artist)
+                    .transform(
+                        BlurTransformation.Builder(requireContext())
+                            .blurRadius(blurAmount.toFloat())
+                            .build()
+                    )
+                    .placeholder(previous)
+                    .error(ColorDrawable(Color.DKGRAY))
+                    .transition(DrawableTransitionOptions.withCrossFade(450))
+                    .into(target)
+            }
+        } else {
+            displaySongArtwork()
+        }
     }
 
     override fun onServiceConnected() {
@@ -72,7 +98,7 @@ class RPRecommendedPlayerFragment : PlayerFragment(R.layout.fragment_rp_recommen
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         super.onSharedPreferenceChanged(sharedPreferences, key)
-        if (key == NEW_BLUR_AMOUNT) updateBlur()
+        if (key == NEW_BLUR_AMOUNT || key == "rp_background_artwork_source") updateBlur()
         if (key == SHOW_LYRICS || key == LYRICS_TYPE) updateLyricsSpacer()
     }
 
