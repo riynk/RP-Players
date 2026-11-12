@@ -48,6 +48,21 @@
 
     <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
         android:layout="@layout/preference_category_title"
+        android:title="@string/pref_background_artwork_title">
+
+        <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEListPreference
+            android:key="rp_background_artwork_source"
+            android:defaultValue="song"
+            android:entries="@array/pref_background_artwork_source_entries"
+            android:entryValues="@array/pref_background_artwork_source_values"
+            android:layout="@layout/list_item_view"
+            android:title="@string/pref_background_artwork_source_title"
+            android:summary="@string/pref_background_artwork_source_summary"
+            app:icon="@drawable/ic_image" />
+    </code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory>
+
+    <code.name.monkey.appthemehelper.common.prefs.supportv7.ATEPreferenceCategory
+        android:layout="@layout/preference_category_title"
         android:title="@string/pref_lyrics_typography_title">
 
         <code.name.monkey.appthemehelper.common.prefs.supportv7.ATESeekBarPreference
