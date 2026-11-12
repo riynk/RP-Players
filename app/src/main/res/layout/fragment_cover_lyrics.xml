@@ -56,4 +56,5 @@
         android:textAppearance="@style/TextViewHeadline5"
         android:textColor="@color/md_white_1000"
         tools:text="@tools:sample/full_names[6]" />
+    </LinearLayout>
 </FrameLayout>
