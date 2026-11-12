@@ -33,6 +33,15 @@
         <item>@string/rp_lyrics</item>
     </array>
 
+    <array name="pref_background_artwork_source_entries">
+        <item>@string/pref_background_artwork_source_song</item>
+        <item>@string/pref_background_artwork_source_artist</item>
+    </array>
+    <string-array name="pref_background_artwork_source_values">
+        <item>song</item>
+        <item>artist</item>
+    </string-array>
+
     <string-array name="pref_full_lyrics_type_values">
         <item>0</item>
         <item>1</item>
