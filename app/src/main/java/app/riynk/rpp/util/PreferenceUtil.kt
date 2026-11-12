@@ -783,6 +783,9 @@ object PreferenceUtil {
             .getInt(AUDIO_FADE_DURATION, 0)
         set(value) = sharedPreferences.edit { putInt(AUDIO_FADE_DURATION, value) }
 
+    val backgroundArtworkSource: String
+        get() = sharedPreferences.getStringOrDefault("rp_background_artwork_source", "song")
+
     var showLyrics: Boolean
         get() = sharedPreferences.getBoolean(SHOW_LYRICS, false)
         set(value) = sharedPreferences.edit { putBoolean(SHOW_LYRICS, value) }
